@@ -1,0 +1,90 @@
+XMEGA PORT:	PIN:			ANSCHLUSS:
+
+A		0			ADCA (10-PIN)
+		1			"
+		2			"
+		3			"
+		4			"
+		5			"
+		6			"
+		7			"
+
+B		0			ADCB (8x 3-PIN)
+		1			"
+		2			"
+		3			"
+		4			"
+		5			"
+		6			"
+		7			"
+
+C		0			I2C - 5V
+		1			"
+		2			Schalter (onboard)
+		3			"
+		4			"
+		5			"
+		6			"
+		7			"
+
+D		0			I2C - 3V3	(Beschleunigung onboard)
+		1			"
+		2			UART (Bluetooth onboard)
+		3			"
+		4			XXX
+		5			XXX
+		6			Schuss
+		7			DRIBBLER
+
+E		0			MOT0 - PWM			
+		1			MOT1 - PWM
+		2			MOT2 - PWM
+		3			MOT3 - PWM
+		4			MOT0 - Richtung
+		5			MOT1 - Richtung
+		6			MOT2 - Richtung
+		7			MOT3 - Richtung
+
+F		0			44-PIN-Stecker
+		1			"
+		2			"
+		3			"
+		4			"
+		5			"
+		6			"
+		7			"
+
+H		0			"
+		1			"
+		2			"
+		3			"
+		4			"
+		5			"
+		6			"
+		7			"
+
+J		0			"
+		1			"
+		2			"
+		3			"
+		4			"
+		5			"
+		6			"
+		7			"
+
+K		0			Debug LED
+		1			"
+		2			"
+		3			"
+		4			"
+		5			"
+		6			"
+		7			Lichtschranke
+
+Q		0			LED - Blau
+		1			LED - Grün
+		2			LED - Gelb
+		3			LED - Rot
+
+
+	

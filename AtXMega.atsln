@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "AtXMega", "AtXMega\AtXMega.cppproj", "{04848CA4-9574-440F-A07E-927AD194E434}"
+EndProject
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "Bodenplatine", "Bodenplatine\Bodenplatine.cproj", "{C5A7D9AE-0233-4136-AFD4-ACB914656DF8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{04848CA4-9574-440F-A07E-927AD194E434}.Debug|AVR.ActiveCfg = Debug|AVR
+		{04848CA4-9574-440F-A07E-927AD194E434}.Debug|AVR.Build.0 = Debug|AVR
+		{04848CA4-9574-440F-A07E-927AD194E434}.Release|AVR.ActiveCfg = Release|AVR
+		{04848CA4-9574-440F-A07E-927AD194E434}.Release|AVR.Build.0 = Release|AVR
+		{C5A7D9AE-0233-4136-AFD4-ACB914656DF8}.Debug|AVR.ActiveCfg = Debug|AVR
+		{C5A7D9AE-0233-4136-AFD4-ACB914656DF8}.Debug|AVR.Build.0 = Debug|AVR
+		{C5A7D9AE-0233-4136-AFD4-ACB914656DF8}.Release|AVR.ActiveCfg = Release|AVR
+		{C5A7D9AE-0233-4136-AFD4-ACB914656DF8}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
