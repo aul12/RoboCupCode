@@ -41,8 +41,8 @@ volatile int16_t tor_winkel = 0;			// Absoluter Winkel zum Tor
 // ADC
 volatile uint8_t muxIR = 0;				    // Aktueller ADC-Kanal
 volatile uint16_t ADC_Offset_0[] =			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
-	{295, 435, 435, 320,
-		440, 380, 560, 470};
+	{300, 440, 430, 330,
+		436, 375, 600, 478};
 volatile uint16_t ADC_Offset_1[] =		
 	{336, 365, 482, 432,
 		 442, 294, 490, 382};
@@ -100,6 +100,9 @@ uint8_t ballGuteEmpfang = 0;				// Aktuelle Güte der Anfahrt des anderen Roboter
 volatile uint8_t dribblerInit = 0;			// Dribbler Initialisierung State-Machine Zustand
 volatile uint16_t dribblerTime = 0;			// Timer für State-Machine
 uint8_t ballInDribTime = 0;
+
+//Start
+volatile uint8_t startTimer = 0;
 
 //Hall-Sensoren
 volatile uint8_t hallCounter[4] = {0,0,0,0};

@@ -35,7 +35,11 @@ void bno055::init(void)
 	
 	buffer [0] = 0x3D; //Register 0x3D 
 	//NDOF Modus auswählen (als letzte option da dann keine config mehr)
-	buffer[1] = 0b1100;
+	#ifdef _FASTCALIB
+		buffer[1] = 0b1100;
+	#else
+		buffer[1] = 0b1011;
+	#endif
 	while(!::TWI_MasterReady(this->twi));
 	::TWI_MasterWrite(this->twi, this->addr, buffer, 2);
 	

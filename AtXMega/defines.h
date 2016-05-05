@@ -15,6 +15,7 @@
 
 //IMU benutzen  --> BoschSensor
 #define _IMU
+//#define _FASTCALIB	//Schnelle Kalibration, eventuell größere Störungen
 //#define _CMPS
 
 // Sharpsensor
@@ -30,7 +31,7 @@
 #define _ESP
 
 //Spannungmessung
-//#define _POWER_MEASURE
+#define _POWER_MEASURE
 
 //Display-Debug
 #define DISPLAY_COUNTER_WDH 50

@@ -228,10 +228,6 @@ int main(void)
 	sei();
 	if(DISPLAYTASTER)
 		display.light(true);
-	
-	//Bno055-Reset
-	imu.init();
-	
 
 	// US_Kanäle initialisieren
 	#ifdef _US
@@ -297,6 +293,9 @@ int main(void)
 		if(torwart2feldspieler && SW_pos == 1) {
 			SW_pos = 0;
 		}
+		
+		if(!MOTORTASTER)
+			startTimer=0;
 		
 		
 		// Linienreaktion

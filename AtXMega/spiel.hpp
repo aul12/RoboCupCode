@@ -34,7 +34,7 @@ inline void anfahrtB(uint8_t drehung)
 				else
 					soll_phi = 0;
 			}
-			else{ // hinter Ball
+			else if(BETRAG(ball_Winkel)>15){ // Parabel anfahrt
 				if(ROBO==1)
 					FahrtrichtungB(1.8 * ball_Winkel, SPEED_NAH);
 				else
@@ -52,6 +52,8 @@ inline void anfahrtB(uint8_t drehung)
 					soll_phi = 0;
 				}
 				
+			}else{
+				FahrtrichtungB(ball_Winkel, SPEED_NAH);
 			}
 		}
 		else if(ballIntens < 120) { // Ball nicht erkennbar
@@ -98,7 +100,15 @@ void spielB1(void)
 		FahrtrichtungB(0, SPEED_BALL);
 		soll_phi = 0;
 	}else{
-		anfahrtB(0);
+		if(startTimer<200){
+			startTimer = 202;
+			SETLED(3);
+			FahrtrichtungB(0, 1500);
+		}else{
+			CLEARLED(3);
+			anfahrtB(0);
+		}
+		
 	}
 }
 
@@ -108,27 +118,12 @@ void spielB2(void)
 	 if(ballda::check() && ballIntens>4000 && BETRAG(ball_Winkel)<60) {
 		 ballInDribTime++;
 		 
-		 if(BETRAG(phi_jetzt) < 45 /*&& US_Werte[0]>70 && US_Werte[2]>70*/) {
+		 if(BETRAG(phi_jetzt) < 80) {
 			 FahrtrichtungB(0, SPEED_BALL);
 			 schuss::Kick();
 		 }
-	/*	 if(ballInDribTime > 200){
-			if(tor_winkel>0)
-				FahrtrichtungB(-90, SPEED_SEITE);
-			else
-				FahrtrichtungB(90, SPEED_SEITE);
-				
-			ballInDribTime = 210;
-		 }else{
-			 FahrtrichtungB(0, 200);
-		 }*/
-		soll_phi = 2*tor_winkel;
-		
-		SETLED(3);
 	}else{
-		ballInDribTime = 0;
-		anfahrtB(1);
-		CLEARLED(3);
+		anfahrtB(2);
 	}
 }
 

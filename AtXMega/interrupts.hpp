@@ -51,6 +51,13 @@ ISR(TCC1_OVF_vect)
 	else { // Anzahl erhöhen
 		Soft_Counter++;
 	}
+	
+	if(MOTORTASTER){
+		startTimer++;
+	}else{
+		startTimer = 0;
+		out = 0;
+	}
 
 	if(phi_jetzt > 180)
 			phi_jetzt -= 360;
@@ -95,7 +102,7 @@ ISR(TCC1_OVF_vect)
 				//Voll Kalibriert
 				uint8_t calibStat = imu.calibStatus();
 				
-				if(calibStat == 0xFF){
+				if(calibStat >= 0xF3){
 					CLEARLED(8);
 
 					/*if(imu.error()){
@@ -288,8 +295,6 @@ ISR(TCC1_OVF_vect)
 				MotorPower(1, 0);
 				MotorPower(2, 0);
 				MotorPower(3, 0);
-				
-				out = 0;
 			}
 		}
         
@@ -682,6 +687,7 @@ void debug_output(void)
 			display.out_int(3, 10, (int16_t)k[2]);
 			display.out_str(4, 1, "Motor 3:");
 			display.out_int(4, 10, (int16_t)k[3]);
+			display.out_int(4, 17, (int16_t)startTimer);
 		break;
 
 		// PID DEBUG
