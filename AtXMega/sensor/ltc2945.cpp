@@ -29,7 +29,7 @@ uint16_t ltc2945::getVoltage()
 	if(this->twi->result == TWIM_RESULT_OK && this->twi->bytesRead == 2) {
 		this->err = false;
 		uint16_t wert = (((int16_t)this->twi->readData[0]) << 8) | this->twi->readData[1];
-		return wert;
+		return wert/0.6535757576 + 780;
 	}
 	else {
 		this->err = true;

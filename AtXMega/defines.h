@@ -55,8 +55,8 @@
 // _COMPLEX_LINE = 5 => Lukas Logik -> Langsam auf Linie (nicht getestet)
 // _COMPLEX_LINE = 6 => Hannes Logik -> Langsam auf Linie (nicht getestet)
 // _COMPLEX_LINE = 7 => Linienerkennung über US (nur wenn Linie kaputt!)
-// _COMPLEX_LINE = 8 => Tim Logik -> sofortiges Dagegensteuern
-#define _COMPLEX_LINE 2
+// _COMPLEX_LINE = 8 => Tim Logik -> sofortiges Dagegensteuern (funktioniert wahrscheinlich als einzige)
+#define _COMPLEX_LINE 8
 
 // Verifizierung der Linie mit US
 //#define _US_VERIF
@@ -96,7 +96,6 @@
 #define US_MAX_POWER 1200 // Positionsfahrt
 #define SPEED_SUPER 1500 // Supefield weite Entfernung
 #define SPEED_SUPER2 1000 // Supefield weite Entfernung schnell
-#define SPEED_MAX_LINIE 800 //Maximale Geschwindigkeit wenn auf Linie fahren
 
 //Hall-Sensoren
 #define HALL_P 0.01

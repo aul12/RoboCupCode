@@ -57,18 +57,18 @@ ISR(TCC1_OVF_vect)
 	}else{
 		startTimer = 0;
 		out = 0;
+		lMuesli = 0;
 	}
 
-	if(phi_jetzt > 180)
+	/*if(phi_jetzt > 180)
 			phi_jetzt -= 360;
 	else if(phi_jetzt < -180)
 		phi_jetzt += 360;
-	phi_jetzt *= -1; // Umdrehen des Winkels, da Kompasswinkel im Uhrzeigersinn
-    //PID_Counter = 0;
+	phi_jetzt *= -1; // Umdrehen des Winkels, da Kompasswinkel im Uhrzeigersinn*/
 		
 	if(dribblerTime++ > 1500){
 		// Dribbler an/aus machen (externe Bedingungen)
-		dribbler::power(ball_Distanz > 2800 && BETRAG(ball_Winkel) < 75 && (MOTORTASTER || SW_pos == 3 || SW_pos == 1));
+		dribbler::power(ball_Distanz > 2800 && BETRAG(ball_Winkel) < 75 && (MOTORTASTER || SW_pos != 3));
 		
 		dribblerTime = 1600;
 	}else if(dribblerTime++ > 1000){
@@ -92,12 +92,16 @@ ISR(TCC1_OVF_vect)
 				CLEARLED(7);
 				
 				
-				phi_jetzt = imu.eulHeading() - Torrichtung;
+				volatile int16_t _phi_jetzt = imu.eulHeading() - Torrichtung;
 				
-				if(phi_jetzt > 180)
-					phi_jetzt -= 360;
-				else if(phi_jetzt < -180)
-					phi_jetzt += 360;
+				if(_phi_jetzt > 180)
+					_phi_jetzt -= 360;
+				else if(_phi_jetzt < -180)
+					_phi_jetzt += 360;
+					
+				phi_jetzt = _phi_jetzt;
+					
+				
 				
 				//Voll Kalibriert
 				uint8_t calibStat = imu.calibStatus();

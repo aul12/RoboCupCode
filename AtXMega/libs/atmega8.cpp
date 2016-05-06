@@ -6,6 +6,7 @@
 
 extern "C" {
 	#include <avr/interrupt.h>	// ISR - Interrupt
+	#include <math.h>
 }
 #include "../driver/usart.h"	// UART Kommunikation
 #include "../defines.h"			// globale Definitionen
@@ -402,7 +403,7 @@ ISR(USARTE1_RXC_vect)
 						}
 						if(minWinkel==-1)  //Nur ein Sensor aktiv
 						{
-							trans=(uint8_t)(maxWinkel*0.1);
+							trans=round(maxWinkel*0.1);
 							break;
 						}
 					}
@@ -416,7 +417,7 @@ ISR(USARTE1_RXC_vect)
 							maxWinkel-=minWinkel;
 						}
 						winkelDiff=maxWinkel-minWinkel;
-						trans = (uint8_t)(( winkelDiff>180 ? maxWinkel+((360-winkelDiff)>>1) : maxWinkel-(winkelDiff>>1) )*0.1);
+						trans = round(( winkelDiff>180 ? maxWinkel+((360-winkelDiff)>>1) : maxWinkel-(winkelDiff>>1) )*0.1);
 						trans%=36;
 					}
 				}
@@ -425,7 +426,15 @@ ISR(USARTE1_RXC_vect)
 				{
 					if(lMuesli)
 					{
-						out_winkel = mWinkel+phi_jetzt;//(lRichtung*90+180)%360+phi_jetzt;
+						//out_winkel = mWinkel+phi_jetzt;//(lRichtung*90+180)%360+phi_jetzt;
+						if(lEcke!=-1)
+						{
+							out_winkel=(lEcke*90+225)%360 - phi_jetzt;
+						}
+						else
+						{
+							out_winkel=(lRichtung*90+180)%360 - phi_jetzt;
+						}
 						out_winkel*=-1;
 						out = 4;
 						return;
@@ -440,6 +449,7 @@ ISR(USARTE1_RXC_vect)
 				mWinkel=trans*10+phi_jetzt;//@TODO
 				if(mWinkel<0)
 					mWinkel+=360;
+				mWinkel%=360;
 				if(preRichtung==-1)
 					preRichtung=richtung(mWinkel);
 	
@@ -447,7 +457,7 @@ ISR(USARTE1_RXC_vect)
 					lEcke=ecke(mWinkel);
 	
 	
-				if(BETRAG(lRichtung-richtung(mWinkel))==2&&lRichtung!=-1)//Sprung um zwei Segmente
+				if((BETRAG(lRichtung-richtung(mWinkel))==2)&&(lRichtung!=-1))//Sprung um zwei Segmente
 					lMuesli=true; //halb raus
 				if(!(lRichtung-richtung(mWinkel)))  //das gleiche Segment
 					lMuesli=false;

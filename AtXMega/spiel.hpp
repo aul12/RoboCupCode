@@ -100,15 +100,7 @@ void spielB1(void)
 		FahrtrichtungB(0, SPEED_BALL);
 		soll_phi = 0;
 	}else{
-		if(startTimer<200){
-			startTimer = 202;
-			SETLED(3);
-			FahrtrichtungB(0, 1500);
-		}else{
-			CLEARLED(3);
-			anfahrtB(0);
-		}
-		
+		anfahrtB(0);	
 	}
 }
 

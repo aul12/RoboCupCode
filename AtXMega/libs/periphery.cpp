@@ -34,7 +34,8 @@ namespace dribbler {
 // Schuss
 namespace schuss {
 	volatile bool schuss_OK = true;			// Schuss darf benutzt werden
-	volatile uint16_t schuss_counter = 0;	// Counter für Schuss-BETRAGtände
+	volatile uint16_t schuss_counter_antidauer = 0;	// Counter für Schuss-abstände
+	volatile uint16_t schuss_counter = 0;
 };
 
 // Lichtschranke
@@ -50,7 +51,7 @@ namespace ballda {
 // Dribblersteuerung
 void dribbler::power(bool ext)
 {
-	if(!force_off && (ext || ::ballda::ball_da)) {
+	if(!force_off && (ext/* || (::ballda::ball_da && SW_pos!=3)*/)) {
 		//Dribbler an
 		TCC0.CCA = 1000;
 		nachlauf = 7;
@@ -75,11 +76,7 @@ void schuss::Kick(void)
 	#ifdef _KICK
 		if(schuss_OK) {
 			::dribbler::force_off = true;
-			Fahrtrichtung(0, SPEED_WEIT);
-			wdt_delay(100);
-			PORTK.OUTSET = (1 << 2);
-			wdt_delay(KICK_DAUER);
-			PORTK.OUTCLR = (1 << 2);
+			schuss::schuss_counter = KICK_DAUER;
 			::ballda::ball_t = 0;
 			::ball_counter = -2;
 			schuss_OK = false;
@@ -93,9 +90,7 @@ void schuss::Kick_LP(void)
 {
 	#ifdef _KICK
 		if(schuss_OK) {
-			PORTK.OUTSET = (1 << 2);
-			wdt_delay(KICK_DAUER_LOW);
-			PORTK.OUTCLR = (1 << 2);
+			schuss::schuss_counter = KICK_DAUER_LOW;
 			::ballda::ball_t = 0;
 			schuss_OK = false;
 		}
@@ -105,9 +100,15 @@ void schuss::Kick_LP(void)
 // Schusstimer
 void schuss::tick(void)
 {
-	if(!schuss_OK && ++schuss_counter > SCHUSS_DELAY) {
-		schuss_counter = 0;
+	if(!schuss_OK && ++schuss_counter_antidauer > SCHUSS_DELAY) {
+		PORTK.OUTCLR = (1 << 2);
+		schuss_counter_antidauer = 0;
 		schuss_OK = true;
+	}else if(schuss_counter > 0){
+		schuss_counter--;
+		PORTK.OUTSET = (1 << 2);
+	}else{
+		PORTK.OUTCLR = (1 << 2);
 	}
 }
 
