@@ -189,6 +189,11 @@ void FahrtrichtungB(int16_t alpha, float speed)
 
 		// Vektoren zusammenrechnen
 		k[i] = (int16_t)Round(kx[i] + ky[i]);
+		
+		#if _COMPLEX_LINE==8
+			if(out>0)
+				k[i] /= 2;
+		#endif
 	}
 }
 

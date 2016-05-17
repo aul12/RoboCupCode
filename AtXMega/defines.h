@@ -15,7 +15,8 @@
 
 //IMU benutzen  --> BoschSensor
 #define _IMU
-//#define _FASTCALIB	//Schnelle Kalibration, eventuell größere Störungen
+#define _FASTCALIB	//Schnelle Kalibration, eventuell größere Störungen
+#define _GYRO_ONLY //Werte nur mit Gyro-Integration
 //#define _CMPS
 
 // Sharpsensor
@@ -58,10 +59,6 @@
 // _COMPLEX_LINE = 8 => Tim Logik -> sofortiges Dagegensteuern (funktioniert wahrscheinlich als einzige)
 #define _COMPLEX_LINE 8
 
-// Verifizierung der Linie mit US
-//#define _US_VERIF
-
-
 // Position
 // US_n_pos => normale Position
 // US_tw_pos => korrigierte Position
@@ -74,7 +71,8 @@
 #define PID_Counter_Max 4
 #define PID_flaeche_Max 200
 
-#define BALL_P 0.4
+#define BALL_P 0.6
+#define BALL_D 0.2
 #define MAX_DREH_BALL 1000
 
 #define PID_P 15.625
@@ -104,8 +102,8 @@
 
 
 // Dribbler
-#define BALLDA_SCHWELLE 10
-#define BALLDA_SCHWELLE_MAX 10*BALLDA_SCHWELLE
+#define BALLDA_SCHWELLE 5
+#define BALLDA_SCHWELLE_MAX 5*BALLDA_SCHWELLE
 
 //Brushless-Dribbler
 #define DRIBBLER_PRESET 0
@@ -143,7 +141,7 @@
 #define BETRAG(zahl) (((zahl)>=0)?(zahl):-(zahl))
 // Ball-Winkel
 #define ball_WinkelR ball_Winkel
-#define ball_WinkelA (ball_Winkel+phi_jetzt)
+//#define ball_WinkelA (ball_Winkel+phi_jetzt)
 
 //Motoren
 #define MAX_PWM 1500
@@ -168,6 +166,9 @@
 
 // Schussdauer
 #define KICK_DAUER_LOW 15
+
+//Max Chip
+#define MAX_READY (PORTD.IN & (0b1<<5))
 
 /////////////
 // Schalter //

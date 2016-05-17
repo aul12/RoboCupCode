@@ -33,7 +33,10 @@ int16_t delta_phi = 0;                      // Differenz der Winkel für PID-Rege
 float PID_flaeche = 0;                      // Integral der PID-Regelung
 volatile int16_t roll = 0;					// Drehrate (D)
 float PID = 0;                              // Korrektur der Fahrtgeschwindigkeit zur Drehung
-volatile uint8_t super_turn = 0;			// Superfielddrehung
+volatile int16_t super_turn = 0;			// Superfielddrehung
+volatile uint8_t trick_shoot_turn = 0;
+volatile int16_t _gyroPhi = 0;				//Aus Messwerten, um 1/0.06 größer als GryoPhi
+volatile int16_t gyroPhi = 0;
 
 volatile int16_t tor_winkel = 0;			// Absoluter Winkel zum Tor
 
@@ -41,8 +44,8 @@ volatile int16_t tor_winkel = 0;			// Absoluter Winkel zum Tor
 // ADC
 volatile uint8_t muxIR = 0;				    // Aktueller ADC-Kanal
 volatile uint16_t ADC_Offset_0[] =			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
-	{300, 440, 430, 330,
-		436, 375, 600, 478};
+	{253, 409, 385, 317,
+		434, 362, 600, 465};
 volatile uint16_t ADC_Offset_1[] =		
 	{336, 365, 482, 432,
 		 442, 294, 490, 382};
@@ -52,6 +55,7 @@ volatile uint16_t ADC_Werte_TP[8] = { 0 };	// ADC-Werte für IR-Sensoren (mit Tie
 volatile uint16_t ball_Distanz = 0;			// Distanz vom Roboter zum Ball
 volatile uint16_t ball_DistanzWinkel = 0;	// Distanz vom Roboter zum Ball mit Winkelkorrektur
 volatile int16_t ball_Winkel = 0;			// Winkel vom Roboter zum Ball (Relativ zum Roboter) (0-360)
+volatile int16_t ball_WinkelA = 0;
 volatile uint16_t ball_Distanz_alt = 0;		// Alte Distanz
 volatile int16_t ball_Winkel_alt = 0;		// Alter Winkel
 volatile uint16_t ball_counter = 0;			// Zähler für Ball-Inaktivität
@@ -61,6 +65,20 @@ const uint16_t ADC_Winkel[] =
 volatile uint8_t lego_IR = 0;				// Lego-Sensor IR
 volatile int16_t TSOP = 0;					// TSOP-IR-Sensor
 volatile uint8_t super_back = 0;			// Super-Field Patroullie
+
+// TSOP
+const uint8_t maxChannel[8] = {
+	0b11111110,
+	0b10111110,
+	0b11101110,
+	0b10101110,
+	0b11011110,
+	0b10011110,
+	0b11001110,
+	0b10001110
+};
+volatile uint8_t maxMux = 0;
+volatile uint16_t maxVal = 0;
 
 // Ultraschall
 volatile uint16_t US_Werte[3] = { 0 };		// Distanzen der Ultraschallsensoren (links, hinten, rechts, vorne)
@@ -99,10 +117,6 @@ uint8_t ballGuteEmpfang = 0;				// Aktuelle Güte der Anfahrt des anderen Roboter
 //Dribbler
 volatile uint8_t dribblerInit = 0;			// Dribbler Initialisierung State-Machine Zustand
 volatile uint16_t dribblerTime = 0;			// Timer für State-Machine
-uint8_t ballInDribTime = 0;
-
-//Start
-volatile uint8_t startTimer = 0;
 
 //Hall-Sensoren
 volatile uint8_t hallCounter[4] = {0,0,0,0};
@@ -114,6 +128,10 @@ volatile int8_t hallNoRotationCounter[4] = {0,0,0,0};
 	
 //Spannungsmesser
 uint16_t voltage = 0;
+int8_t lowVoltageCount = 0;
+
+// Halb Raus Regelung
+volatile uint8_t darfHalbRaus = 0;
 	
 	
 #endif

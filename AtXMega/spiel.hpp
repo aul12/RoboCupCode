@@ -20,27 +20,22 @@ inline void anfahrtB(uint8_t drehung)
 {
 	if(ballGute >= ballGuteEmpfang || !BLUETOOTH_ENABLE){
 		if(ballIntens > 3000 || (ballIntens > 2800 && BETRAG(ball_Winkel) < 45)) { // Nahbereich-Anfahrt
-			if(ball_Winkel > 72){ // zwischen Ball und Tor rechts
+			if(ball_WinkelA < 90)
+				darfHalbRaus = 1;
+			
+			if(ball_Winkel > 45){ // zwischen Ball und Tor rechts
 				FahrtrichtungB(-300+ball_Winkel, SPEED_KREIS);
-				if(drehung==1)
-					soll_phi = tor_winkel * 2;
-				else
-					soll_phi = 0;
 			}
-			else if(ball_Winkel < -72){ // zwischen Ball und Tor links
+			else if(ball_Winkel < -45){ // zwischen Ball und Tor links
 				FahrtrichtungB(300+ball_Winkel, SPEED_KREIS);
-				if(drehung==1)
-					soll_phi = tor_winkel * 2;
-				else
-					soll_phi = 0;
 			}
-			else if(BETRAG(ball_Winkel)>15){ // Parabel anfahrt
-				if(ROBO==1)
-					FahrtrichtungB(1.8 * ball_Winkel, SPEED_NAH);
-				else
-					FahrtrichtungB(1.8 * ball_Winkel, SPEED_NAH);
+			else{ // Parabel anfahrt
+				FahrtrichtungB(1.6 * ball_Winkel, SPEED_NAH);
+				
+				if(BETRAG(ball_WinkelA) < 30)
+					soll_phi = -ball_WinkelA;
 					
-				if(drehung==1){
+				/*if(drehung==1){
 					soll_phi = tor_winkel * 2;
 				}else if(drehung == 2){
 					if(US_Werte[0]<60)
@@ -50,10 +45,7 @@ inline void anfahrtB(uint8_t drehung)
 						
 				}else{
 					soll_phi = 0;
-				}
-				
-			}else{
-				FahrtrichtungB(ball_Winkel, SPEED_NAH);
+				}*/
 			}
 		}
 		else if(ballIntens < 120) { // Ball nicht erkennbar
@@ -68,8 +60,9 @@ inline void anfahrtB(uint8_t drehung)
 			soll_phi = 0;
 		}
 		else { // Fernbereich-Anfahrt
-			uint16_t BETRAGtand = 4500-ballIntens;
-			FahrtrichtungB(ball_Winkel*1.1, BETRAGtand * BALL_P);
+			uint16_t abstand = 4500-ballIntens;
+			uint16_t abstand_alt = 4500-ball_Distanz_alt;
+			FahrtrichtungB(ball_Winkel*1.2, abstand * BALL_P + (abstand - abstand_alt) * BALL_D);
 			soll_phi = 0;
 		}
 	}else{
@@ -94,12 +87,14 @@ inline void anfahrtB(uint8_t drehung)
 void spielB1(void)
 {
    if(LICHTSCHRANKE && ballIntens>4000 && BETRAG(ball_Winkel)<30) {
-		if(BETRAG(phi_jetzt) < 80) {
+		if(BETRAG(phi_jetzt) < 30) 
 			schuss::Kick();
-		}
+		
 		FahrtrichtungB(0, SPEED_BALL);
+		
 		soll_phi = 0;
 	}else{
+		darfHalbRaus = 0;
 		anfahrtB(0);	
 	}
 }
@@ -107,14 +102,61 @@ void spielB1(void)
 // Spielfunktion B-Feld (Drehung zum Tor)
 void spielB2(void)
 {	
-	 if(ballda::check() && ballIntens>4000 && BETRAG(ball_Winkel)<60) {
-		 ballInDribTime++;
-		 
-		 if(BETRAG(phi_jetzt) < 80) {
+	 if(ballda::check() /*&& ballIntens>4000 && BETRAG(ball_Winkel)<60*/) {		 
+		if(US_pos[0]>60 && US_pos[0] < 120 && trick_shoot_turn==0) {
+			if(BETRAG(phi_jetzt) < 10){
+				schuss::Kick();
+			}
 			 FahrtrichtungB(0, SPEED_BALL);
-			 schuss::Kick();
+			 super_turn = 0;
+		 }else{			 
+			 darfHalbRaus = 1;
+			 
+			 FahrtrichtungB(0,0);
+			 
+			 if(trick_shoot_turn == 0){
+				 if(out>0){
+					if(lRichtung==1 || lEcke==0)
+						trick_shoot_turn = 2;
+					else if(lRichtung == 3 || lEcke==3)
+						trick_shoot_turn = 1;
+					else{
+						if(US_Werte[0]>US_Werte[2])
+							trick_shoot_turn = 1;
+						else
+							trick_shoot_turn = 2;	
+					}
+				 }else{
+					 if(US_Werte[0]>US_Werte[2])
+						trick_shoot_turn = 1;
+					 else
+						trick_shoot_turn = 2;
+				 }
+					
+					
+				gyroPhi = phi_jetzt;				 				 
+			 }else if(trick_shoot_turn == 1 || trick_shoot_turn == 2){
+				super_turn = (trick_shoot_turn==1?-300:300);
+					
+				if(BETRAG(gyroPhi)>120)
+					trick_shoot_turn += 2;
+			 }else if(trick_shoot_turn == 3 || trick_shoot_turn == 4){
+				super_turn = trick_shoot_turn==3?-1500:1500;
+				
+				if(BETRAG(gyroPhi)<90)
+					schuss::Kick();
+				
+				if(BETRAG(gyroPhi)<20){
+					trick_shoot_turn = 0;
+					super_turn = 0;
+					soll_phi = 0;
+				}
+			 }
 		 }
 	}else{
+		darfHalbRaus = 0;
+		trick_shoot_turn = 0;
+		super_turn = 0;
 		anfahrtB(2);
 	}
 }
@@ -137,7 +179,8 @@ void torwartB(void){
 				else{ // zwischen Ball und Tor links
 					FahrtrichtungB(300+ball_Winkel, SPEED_KREIS);
 					soll_phi = 0;
-				}
+			
+			}
 			}
         }else{
             Fahrtrichtung_XY(90, 30);
@@ -149,7 +192,6 @@ void torwartB(void){
 // Nullprogramm @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 void PIDprogramm(void)
 {		
-	
 	soll_phi = 0;		
 	
 	FahrtrichtungB(0,0);

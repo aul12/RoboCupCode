@@ -54,7 +54,7 @@ void dribbler::power(bool ext)
 	if(!force_off && (ext/* || (::ballda::ball_da && SW_pos!=3)*/)) {
 		//Dribbler an
 		TCC0.CCA = 1000;
-		nachlauf = 7;
+		nachlauf = 0;		//@CHECK
 	}
 	else {
 		if(--nachlauf == 0) {

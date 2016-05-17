@@ -27,6 +27,7 @@ ISR(TCC1_OVF_vect)
 				if(EEPROM_write) {
 					#ifdef _IMU
 						Torrichtung = imu.eulHeading();
+						_gyroPhi = 0;
 					#else
 						Torrichtung = CMPS/10;
 					#endif
@@ -53,9 +54,8 @@ ISR(TCC1_OVF_vect)
 	}
 	
 	if(MOTORTASTER){
-		startTimer++;
+
 	}else{
-		startTimer = 0;
 		out = 0;
 		lMuesli = 0;
 	}
@@ -68,7 +68,7 @@ ISR(TCC1_OVF_vect)
 		
 	if(dribblerTime++ > 1500){
 		// Dribbler an/aus machen (externe Bedingungen)
-		dribbler::power(ball_Distanz > 2800 && BETRAG(ball_Winkel) < 75 && (MOTORTASTER || SW_pos != 3));
+		dribbler::power(ball_Distanz > 2400 && BETRAG(ball_Winkel) < 75 && (MOTORTASTER || SW_pos != 3));
 		
 		dribblerTime = 1600;
 	}else if(dribblerTime++ > 1000){
@@ -154,9 +154,10 @@ ISR(TCC1_OVF_vect)
 			}
 
 			ball_Winkel = ((int16_t)(atan2(Vektor_Y, Vektor_X)*180.0/M_PI));
+			ball_WinkelA = ball_Winkel - phi_jetzt;
 			
 			if(ROBO==0)
-				ball_Winkel+=10;
+				ball_Winkel -= 5;
 			else{
 				ball_Winkel+=24;
 				
@@ -177,6 +178,8 @@ ISR(TCC1_OVF_vect)
 			ballGute = 255;
 		}else if(ballWeg){
 			ballGute = 1;
+		}else if(!MOTORTASTER){
+			ballGute = 0;
 		}else{
 			ballGute = (ballIntens /60) * ((300-BETRAG(ball_Winkel))/120);
 			
@@ -208,7 +211,11 @@ ISR(TCC1_OVF_vect)
 	}
     else if(PID_Counter == PID_Counter_Max*2/4) {
         // Drehung
-		delta_phi = soll_phi - phi_jetzt;
+		#ifdef _GYRO_ONLY
+			delta_phi = gyroPhi - phi_jetzt;
+		#else
+			delta_phi = soll_phi - phi_jetzt;
+		#endif
 
         if(delta_phi > 180)
             delta_phi -= 360;
@@ -228,13 +235,21 @@ ISR(TCC1_OVF_vect)
             PID_flaeche *= 0.99;
             
 		// PID
-	//	#ifdef _IMU
+		#ifdef _IMU
 			roll = imu.gyrDataZ();
 			if(imu.error())
 				roll = 0;
 				
-			//sPID = PID_P * delta_phi + PID_I * PID_flaeche + PID_D * roll;
-	//	#endif
+			_gyroPhi += (int16_t)(roll*dt);
+			_gyroPhi %= 6000;
+			
+			gyroPhi = (int16_t)(_gyroPhi*0.06);
+			
+			if(gyroPhi>180)
+				gyroPhi -= 360;
+			else if(gyroPhi<-180)
+				gyroPhi += 360;
+		#endif
 		PID = PID_P * delta_phi + PID_I * PID_flaeche + PID_D * roll;
 
 		// Langsamer drehen
@@ -243,8 +258,9 @@ ISR(TCC1_OVF_vect)
 		else if(PID < -MAX_DREH_BALL)
 			PID = -MAX_DREH_BALL;
 		PID_int = (int16_t)Round(PID);
-		if(super_turn)
-			PID_int = 1800;
+		if(super_turn!=0)
+			PID_int = super_turn;
+			
 		
 		// Stärke der Regelung
 		{ // Gültigkeitsbereich für lokale Variablen
@@ -453,10 +469,23 @@ ISR(TCC1_OVF_vect)
 	}
 	
 	#ifdef _POWER_MEASURE
-		if(voltage < 11000)
-			SETLED(6);
-		else
-			CLEARLED(6);
+		if(voltage < 11000){
+			lowVoltageCount++;
+			
+			if(lowVoltageCount > 10){
+				SETLED(6);
+				if(lowVoltageCount>20)
+					lowVoltageCount = 20;
+			}
+		}	
+		else{
+			lowVoltageCount--;
+			
+			if(lowVoltageCount<10)
+				CLEARLED(6);
+				if(lowVoltageCount < 0)
+					lowVoltageCount = 0;
+		}
 	#endif
 }
 
@@ -477,12 +506,6 @@ ISR(USARTD0_RXC_vect){
 	ballGuteEmpfang = debug.usart->DATA;
 }
 
-// twiMaster Interrupt
-ISR(TWIC_TWIM_vect)
-{
-	TWI_MasterInterruptHandler(&twiMaster);
-}
-
 // twiMasterD Interrupt
 ISR(TWID_TWIM_vect)
 {
@@ -493,6 +516,23 @@ ISR(TWID_TWIM_vect)
 ISR(TWIF_TWIM_vect)
 {
 	TWI_MasterInterruptHandler(&twiMasterF);
+}
+
+ISR(SPIC_INT_vect)
+{
+	maxMux++;
+	
+	if(maxMux == 1){
+		while(!MAX_READY);
+		SPIC.DATA = 0;
+	}else if(maxMux == 2){
+		maxVal = SPIC.DATA<<8;
+		SPIC.DATA = 0;
+	}else{
+		maxVal |= SPIC.DATA;
+		SPIC.DATA = maxChannel[0];
+		maxMux = 0;
+	}
 }
 
 //Hall-Timer Overflow -> keine Bewegung
@@ -691,7 +731,6 @@ void debug_output(void)
 			display.out_int(3, 10, (int16_t)k[2]);
 			display.out_str(4, 1, "Motor 3:");
 			display.out_int(4, 10, (int16_t)k[3]);
-			display.out_int(4, 17, (int16_t)startTimer);
 		break;
 
 		// PID DEBUG
@@ -877,14 +916,16 @@ void debug_output(void)
 			#ifdef _IMU
 			display.out_str(1, 1, "Phi-Jetzt:");
 			display.out_int(1, 7, (int16_t)phi_jetzt);
-			display.out_str(2, 1, "GyrZ:");
-			display.out_int(2, 8, (int16_t)imu.gyrDataZ());
+			display.out_str(2, 1, "Roll:");
+			display.out_int(2, 7, (int16_t)roll);
 			display.out_str(3, 1, "Pitch:");
-			display.out_int(3, 8, (int16_t)imu.eulPitch());
+			display.out_int(3, 7, (int16_t)imu.eulPitch());
 			display.out_str(1, 11, "GyrX:");
 			display.out_int(1, 17, (int16_t)imu.gyrDataX());
 			display.out_str(2, 11, "GyrY:");
 			display.out_int(2, 17, (int16_t)imu.gyrDataY());
+			display.out_str(3, 11, "GyP:");
+			display.out_int(3, 15, (int16_t)gyroPhi);
 			#else
 			display.out_str(1, 1, "_IMU not compiled");
 			#endif

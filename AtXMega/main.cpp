@@ -44,7 +44,6 @@ extern "C" {
 // Klassen //
 /////////////
 
-TWI_Master_t twiMaster;
 TWI_Master_t twiMasterD;
 TWI_Master_t twiMasterF;
 lcd03 display(&twiMasterF, I2C_DISPLAY);
@@ -92,9 +91,14 @@ int main(void)
 	// I2C initialisieren
 	TWI_MasterInit(&twiMasterD, &TWID, TWI_MASTER_INTLVL_HI_gc, TWI_BAUD(F_CPU, 100000UL));
 	TWI_MasterInit(&twiMasterF, &TWIF, TWI_MASTER_INTLVL_HI_gc, TWI_BAUD(F_CPU, 100000UL));
+	
+	// Spi initialisieren
+	/*SPIC.CTRL = (0b0 << 7) | (0b1 << 6) | (0b1 << 4) | (0b00 << 2) | 0b11; //Doppelte Taktrate | Aktivieren | Master | Transfer Modus | Prescaler 1/32
+	SPIC.INTCTRL = 0b10;	//Interrupt Priorität (Medium)*/
+	
 
 	// Ports deklarieren
-	PORTB.DIR = 0b00000000;		//Hall und JTAG
+	PORTB.DIR = 0b00000000;		//Hall und JTAG 
 	PORTC.DIR = 0b11011011;		//Dribbler, Pixy und SPI
 	PORTD.DIR = 0b10001011;		//Pixy, BT, I²C
 	PORTE.DIR = 0b10001111;		//Linie, Hall, PWM
@@ -116,6 +120,10 @@ int main(void)
 	//Reset für BNO auf High (K3)
 	PORTK.OUTSET = (0b1 << 3);
 	
+	//CS für Max auf Low
+	/*PORTC.OUTCLR = (0b1 << 4);
+	SPIC.DATA = maxChannel[0];*/
+	
 	// PWM-Einstellungen (S. 163)
 	TCE0.CTRLA = (0b0001 << 0); // Prescaler (1)
 	TCE0.CTRLB = (0b1111 << 4) | (0b011 << 0); // Ports aktivieren (ABCD) | PWM (single-slope)
@@ -126,7 +134,7 @@ int main(void)
 	TCC0.CTRLA = 0b0101;//Prescaler(1/64)
 	TCC0.CTRLB = (0b0001 << 4) | (0b011<<0); // Port A aktivieren (->C0) | PWM (single-slope)
 	TCC0.PER = 10000;//1 PWM Cycle entspricht 20ms (50Hz)
-	TCC0.CCA = 500;
+	TCC0.CCA = 500;//1Ms Puls (Entspricht PPM 0)
 	
 	PORTC.OUTSET = (0b1<<1);
 	
@@ -243,10 +251,6 @@ int main(void)
 		while(1)
 			wdt_reset();*/
 	#endif
-
-	
-	
-	
 		
 		
 	// ADC-Interrupt initialisieren
@@ -294,46 +298,23 @@ int main(void)
 			SW_pos = 0;
 		}
 		
-		if(!MOTORTASTER)
-			startTimer=0;
-		
 		
 		// Linienreaktion
 		#if _COMPLEX_LINE==1||_COMPLEX_LINE==5
 			if(out > 2) {
-				#ifdef _US_VERIF
-					if(US_Werte[0]>30 && US_Werte[1]>30 && US_Werte[2]>30)
-						Fahrtrichtung(out_winkel+180, SPEED_LINIE);
-				#else
-					Fahrtrichtung(out_winkel+180, SPEED_LINIE);
-				#endif
+				Fahrtrichtung(out_winkel+180, SPEED_LINIE);
 			}
 		#elif _COMPLEX_LINE==2 
 			if(out > 1) {
-				#ifdef _US_VERIF
-					if(US_Werte[0]>30 && US_Werte[1]>30 && US_Werte[2]>30)
-						Fahrtrichtung(out_winkel+180, SPEED_LINIE);
-				#else
-					Fahrtrichtung(out_winkel+180, SPEED_LINIE);
-				#endif
+				Fahrtrichtung(out_winkel+180, SPEED_LINIE);
 			}
 		#elif _COMPLEX_LINE==3||_COMPLEX_LINE==6
 			if(out >= 2) {
-				#ifdef _US_VERIF
-					if(US_Werte[0]>30 && US_Werte[1]>30 && US_Werte[2]>30)
-						Fahrtrichtung(-out_winkel, SPEED_LINIE);
-				#else
-					Fahrtrichtung(-out_winkel, SPEED_LINIE);
-				#endif
+				Fahrtrichtung(-out_winkel, SPEED_LINIE);
 			}
 		#elif _COMPLEX_LINE==4
 			if(out >= 1) {
-				#ifdef _US_VERIF
-					if(US_Werte[0]>30 && US_Werte[1]>30 && US_Werte[2]>30)
-						Fahrtrichtung(-out_winkel, SPEED_LINIE);
-				#else
-					Fahrtrichtung(-out_winkel, SPEED_LINIE);
-				#endif
+				Fahrtrichtung(-out_winkel, SPEED_LINIE);
 			}
 		#elif _COMPLEX_LINE==7
 			if(US_pos[1]<30)//hinten
@@ -359,7 +340,9 @@ int main(void)
 			else if(US_pos[0]>120)//rechts
 				Fahrtrichtung(90, SPEED_LINIE);
 		#elif _COMPLEX_LINE==8
-			if(out>0)
+			if(out>0 && !darfHalbRaus)
+				Fahrtrichtung(out_winkel, SPEED_LINIE);
+			else if(out > 2)
 				Fahrtrichtung(out_winkel, SPEED_LINIE);
 		#else
 			if(out > 1) {
