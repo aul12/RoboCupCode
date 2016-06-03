@@ -19,33 +19,24 @@
 inline void anfahrtB(uint8_t drehung)
 {
 	if(ballGute >= ballGuteEmpfang || !BLUETOOTH_ENABLE){
+		if(ball_WinkelA < 90 && ballIntens>2400)
+			darfHalbRaus = 1;
+		
 		if(ballIntens > 3000 || (ballIntens > 2800 && BETRAG(ball_Winkel) < 45)) { // Nahbereich-Anfahrt
-			if(ball_WinkelA < 90)
-				darfHalbRaus = 1;
 			
-			if(ball_Winkel > 45){ // zwischen Ball und Tor rechts
+			if(ball_Winkel > 60){ // zwischen Ball und Tor rechts
 				FahrtrichtungB(-300+ball_Winkel, SPEED_KREIS);
+				soll_phi = 0;
 			}
-			else if(ball_Winkel < -45){ // zwischen Ball und Tor links
+			else if(ball_Winkel < -60){ // zwischen Ball und Tor links
 				FahrtrichtungB(300+ball_Winkel, SPEED_KREIS);
+				soll_phi = 0;
 			}
 			else{ // Parabel anfahrt
-				FahrtrichtungB(1.6 * ball_Winkel, SPEED_NAH);
+				FahrtrichtungB(1.8 * ball_Winkel, SPEED_NAH);
 				
-				if(BETRAG(ball_WinkelA) < 30)
+				if(BETRAG(ball_WinkelA) < 29 ||(BETRAG(ball_WinkelA<120) && out>0))
 					soll_phi = -ball_WinkelA;
-					
-				/*if(drehung==1){
-					soll_phi = tor_winkel * 2;
-				}else if(drehung == 2){
-					if(US_Werte[0]<60)
-						soll_phi = -20;
-					else if(US_Werte[2]<60)
-						soll_phi = 20;
-						
-				}else{
-					soll_phi = 0;
-				}*/
 			}
 		}
 		else if(ballIntens < 120) { // Ball nicht erkennbar
@@ -86,7 +77,7 @@ inline void anfahrtB(uint8_t drehung)
 // Spielfunktion B-Feld
 void spielB1(void)
 {
-   if(LICHTSCHRANKE && ballIntens>4000 && BETRAG(ball_Winkel)<30) {
+   if(BALL_IN_DRIBB) {
 		if(BETRAG(phi_jetzt) < 30) 
 			schuss::Kick();
 		
@@ -102,14 +93,8 @@ void spielB1(void)
 // Spielfunktion B-Feld (Drehung zum Tor)
 void spielB2(void)
 {	
-	 if(ballda::check() /*&& ballIntens>4000 && BETRAG(ball_Winkel)<60*/) {		 
-		if(US_pos[0]>60 && US_pos[0] < 120 && trick_shoot_turn==0) {
-			if(BETRAG(phi_jetzt) < 10){
-				schuss::Kick();
-			}
-			 FahrtrichtungB(0, SPEED_BALL);
-			 super_turn = 0;
-		 }else{			 
+	if(BALL_IN_DRIBB) {	
+		if(out>0 || trick_shoot_turn!=0){		//Auf Linie -> Trickshoot	 
 			 darfHalbRaus = 1;
 			 
 			 FahrtrichtungB(0,0);
@@ -133,18 +118,22 @@ void spielB2(void)
 						trick_shoot_turn = 2;
 				 }
 					
-					
-				gyroPhi = phi_jetzt;				 				 
+				#ifndef _GYRO_ONLY
+					gyroPhi = phi_jetzt;
+				#endif				 				 
 			 }else if(trick_shoot_turn == 1 || trick_shoot_turn == 2){
-				super_turn = (trick_shoot_turn==1?-300:300);
+				super_turn = (trick_shoot_turn==1?-250:250);
 					
-				if(BETRAG(gyroPhi)>120)
+				if(BETRAG(gyroPhi)>110)
 					trick_shoot_turn += 2;
+				
 			 }else if(trick_shoot_turn == 3 || trick_shoot_turn == 4){
 				super_turn = trick_shoot_turn==3?-1500:1500;
 				
-				if(BETRAG(gyroPhi)<90)
+				if(BETRAG(gyroPhi)<100){
 					schuss::Kick();
+				}
+					
 				
 				if(BETRAG(gyroPhi)<20){
 					trick_shoot_turn = 0;
@@ -152,12 +141,28 @@ void spielB2(void)
 					soll_phi = 0;
 				}
 			 }
-		 }
+		}else if(US_pos[0]>60 && US_pos[0] < 120) {//In Mitte -> schieﬂen
+			if(BETRAG(phi_jetzt) < 30){
+				schuss::Kick();
+			}
+			FahrtrichtungB(0, SPEED_BALL);
+			super_turn = 0;
+		}else{ //Am Rand -> Richtung Tor drehen
+			super_turn = 0;
+			FahrtrichtungB(0, SPEED_BALL);
+			 if(US_pos[0] < 90){
+				 FahrtrichtungB(90, 600);
+				// soll_phi = -20;
+			 }else{
+				 FahrtrichtungB(90, 600);
+				// soll_phi = 20;
+			 }
+		}		 
 	}else{
 		darfHalbRaus = 0;
 		trick_shoot_turn = 0;
 		super_turn = 0;
-		anfahrtB(2);
+		anfahrtB(0);
 	}
 }
 
@@ -176,8 +181,7 @@ void torwartB(void){
 					FahrtrichtungB(-300+ball_Winkel, SPEED_KREIS);
 					soll_phi = 0;
 				}
-				else{ // zwischen Ball und Tor links
-					FahrtrichtungB(300+ball_Winkel, SPEED_KREIS);
+				else{ // zwischen Ball und Tor links					FahrtrichtungB(300+ball_Winkel, SPEED_KREIS);
 					soll_phi = 0;
 			
 			}

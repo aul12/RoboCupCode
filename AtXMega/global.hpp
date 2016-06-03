@@ -34,7 +34,7 @@ float PID_flaeche = 0;                      // Integral der PID-Regelung
 volatile int16_t roll = 0;					// Drehrate (D)
 float PID = 0;                              // Korrektur der Fahrtgeschwindigkeit zur Drehung
 volatile int16_t super_turn = 0;			// Superfielddrehung
-volatile uint8_t trick_shoot_turn = 0;
+volatile uint8_t trick_shoot_turn = 0;		//State Machine für Trickshoot
 volatile int16_t _gyroPhi = 0;				//Aus Messwerten, um 1/0.06 größer als GryoPhi
 volatile int16_t gyroPhi = 0;
 
@@ -44,8 +44,8 @@ volatile int16_t tor_winkel = 0;			// Absoluter Winkel zum Tor
 // ADC
 volatile uint8_t muxIR = 0;				    // Aktueller ADC-Kanal
 volatile uint16_t ADC_Offset_0[] =			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
-	{253, 409, 385, 317,
-		434, 362, 600, 465};
+	{251, 404, 392, 297,
+		426, 374, 620, 445};
 volatile uint16_t ADC_Offset_1[] =		
 	{336, 365, 482, 432,
 		 442, 294, 490, 382};
@@ -78,10 +78,13 @@ const uint8_t maxChannel[8] = {
 	0b10001110
 };
 volatile uint8_t maxMux = 0;
+volatile uint8_t tsopMux = 0;
 volatile uint16_t maxVal = 0;
+volatile uint16_t tsopWerte[8];
 
 // Ultraschall
 volatile uint16_t US_Werte[3] = { 0 };		// Distanzen der Ultraschallsensoren (links, hinten, rechts, vorne)
+volatile uint16_t Abstand_Linie[5] = {0,25, 15, 15, 5};
 volatile uint8_t US_Abfrage = 0;			// Aktueller Sensor
 volatile int16_t US_n_pos[2] = { 0 };		// Position des Roboters
 int16_t torwart_x = 61;						// soll X-Position für Torwart

@@ -21,7 +21,6 @@ ISR(TCC1_OVF_vect)
 	if(Soft_Counter >= Soft_Counter_Max) { // Overflow von Soft_Counter, Neustart bei 0
 		// Zähler zurücksetzen
 		Soft_Counter = 0;
-		// Alle Motoren ausschalten
 		if(!MOTORTASTER) { // Wenn Motorschalter auf OFF
 			if(EEPROMTASTER) { // Wenn EEPROM-Schalter auf ein
 				if(EEPROM_write) {
@@ -48,23 +47,15 @@ ISR(TCC1_OVF_vect)
 				atmega8_kalibration(0);
 
 		}
-	}
-	else { // Anzahl erhöhen
+	}else { // Anzahl erhöhen
 		Soft_Counter++;
 	}
 	
-	if(MOTORTASTER){
-
-	}else{
+	
+	if(!MOTORTASTER){
 		out = 0;
 		lMuesli = 0;
 	}
-
-	/*if(phi_jetzt > 180)
-			phi_jetzt -= 360;
-	else if(phi_jetzt < -180)
-		phi_jetzt += 360;
-	phi_jetzt *= -1; // Umdrehen des Winkels, da Kompasswinkel im Uhrzeigersinn*/
 		
 	if(dribblerTime++ > 1500){
 		// Dribbler an/aus machen (externe Bedingungen)
@@ -91,8 +82,11 @@ ISR(TCC1_OVF_vect)
 			if(imu.systemStatus() == 5){
 				CLEARLED(7);
 				
-				
-				volatile int16_t _phi_jetzt = imu.eulHeading() - Torrichtung;
+				#ifdef _GYRO_ONLY
+					volatile int16_t _phi_jetzt = imu.eulHeading() - Torrichtung;
+				#else
+					volatile int16_t _phi_jetzt = gyroPhi;
+				#endif
 				
 				if(_phi_jetzt > 180)
 					_phi_jetzt -= 360;
@@ -100,18 +94,12 @@ ISR(TCC1_OVF_vect)
 					_phi_jetzt += 360;
 					
 				phi_jetzt = _phi_jetzt;
-					
-				
-				
+							
 				//Voll Kalibriert
 				uint8_t calibStat = imu.calibStatus();
 				
 				if(calibStat >= 0xF3){
 					CLEARLED(8);
-
-					/*if(imu.error()){
-						phi_jetzt = soll_phi;
-					}*/
 				}
 				else{
 					SETLED(8);
@@ -121,20 +109,13 @@ ISR(TCC1_OVF_vect)
 				imu.init();
 				SETLED(7);
 			}
-		#else
-			#ifdef _CMPS
-				phi_jetzt = (CMPS/10) - Torrichtung;
-				
-				if(phi_jetzt > 180)
-				phi_jetzt -= 360;
-				else if(phi_jetzt < -180)
-				phi_jetzt += 360;
-			#endif
 		#endif
     }
-	else if(PID_Counter == PID_Counter_Max/4) {		
-		// Ball-Winkel & Distanz bestimmen
+	else if(PID_Counter == PID_Counter_Max/4) {	
+		voltage = spannung.getVoltage();
 		
+			
+		// Ball-Winkel & Distanz bestimmen
 		uint16_t weg = SCHALTER(6)?ADC_BALLWEG_AKTIV:ADC_BALLWEG_PASSIV;
 		
 	//	uint8_t ballWeg = false;
@@ -156,9 +137,9 @@ ISR(TCC1_OVF_vect)
 			ball_Winkel = ((int16_t)(atan2(Vektor_Y, Vektor_X)*180.0/M_PI));
 			ball_WinkelA = ball_Winkel - phi_jetzt;
 			
-			if(ROBO==0)
-				ball_Winkel -= 5;
-			else{
+			if(ROBO==0){
+				
+			}else{
 				ball_Winkel+=24;
 				
 				if(ball_Winkel>0)
@@ -211,11 +192,7 @@ ISR(TCC1_OVF_vect)
 	}
     else if(PID_Counter == PID_Counter_Max*2/4) {
         // Drehung
-		#ifdef _GYRO_ONLY
-			delta_phi = gyroPhi - phi_jetzt;
-		#else
-			delta_phi = soll_phi - phi_jetzt;
-		#endif
+		delta_phi = soll_phi - phi_jetzt;
 
         if(delta_phi > 180)
             delta_phi -= 360;
@@ -241,9 +218,9 @@ ISR(TCC1_OVF_vect)
 				roll = 0;
 				
 			_gyroPhi += (int16_t)(roll*dt);
-			_gyroPhi %= 6000;
+			_gyroPhi %= 5760;
 			
-			gyroPhi = (int16_t)(_gyroPhi*0.06);
+			gyroPhi = (int16_t)(_gyroPhi/16);
 			
 			if(gyroPhi>180)
 				gyroPhi -= 360;
@@ -258,7 +235,7 @@ ISR(TCC1_OVF_vect)
 		else if(PID < -MAX_DREH_BALL)
 			PID = -MAX_DREH_BALL;
 		PID_int = (int16_t)Round(PID);
-		if(super_turn!=0)
+		if(super_turn!=0  && out < 3)
 			PID_int = super_turn;
 			
 		
@@ -271,22 +248,10 @@ ISR(TCC1_OVF_vect)
 			power[3] = k[3]+PID_int;
 			
 			
-			#ifdef _POWER_MEASURE
-				voltage = spannung.getVoltage();
-				float amp = 12600.0/voltage;
-				power[0] *= amp;
-				power[1] *= amp;
-				power[2] *= amp;
-				power[3] *= amp;
-			#endif
-			
-			#ifdef _ESP
-				if((BETRAG(imu.eulRoll())>10 && BETRAG(imu.gyrDataX())> 800) ||
-						 (BETRAG(imu.eulPitch())>10 && BETRAG(imu.gyrDataX())>800)){
-					power[0] = power[1] = power[2] = power[3] = PID_int;
-				}else{
-				}
-			#endif
+			if((BETRAG(imu.eulRoll())>8 && BETRAG(imu.gyrDataX())> 800) ||
+						(BETRAG(imu.eulPitch())>8 && BETRAG(imu.gyrDataX())>800)){
+				power[0] = power[1] = power[2] = power[3] = PID_int;
+			}
 
 			// Optimierungsalgorithmus
 			int16_t max_power = 0;
@@ -419,6 +384,23 @@ ISR(TCC1_OVF_vect)
 				}
 				US_tw_pos[0] = (links_tmp+182-rechts_tmp)/2;
 			}
+			
+			if(out>0){
+				switch(lRichtung){
+					case 0:
+						US_tw_pos[1] = 240 - Abstand_Linie[out];
+						break;
+					case 1:
+						US_tw_pos[0] = 180 - Abstand_Linie[out];
+						break;
+					case 2:
+						US_tw_pos[1] = Abstand_Linie[out];
+						break;
+					case 3:
+						US_tw_pos[0] = Abstand_Linie[out];
+						break;
+				}
+			}
 		}
 	#else
 		// Default-Werte
@@ -438,27 +420,6 @@ ISR(TCC1_OVF_vect)
 	
 	// Interrupt läuft noch
 	timer_fail = 0;
-	
-	/*if(newPixyData){
-		int16_t x_diff  = 160-pixyVorneData->xPos;
-		
-		tor_winkel_rel = -(int16_t)(atan(x_diff*0.0047957937)*57.2957795131);
-		
-		tor_winkel = ((tor_winkel_rel + phi_jetzt) + (tor_winkel * 9))/10;
-		
-		newPixyData = 0;
-	}
-	
-	
-	if(pixyNoObjectTimer++ > 250){
-		tor_winkel = 0;
-		pixyNoObjectTimer = 252;
-		CLEARLED(5);
-	}
-	else{
-		SETLED(5);
-	}*/
-	
 		
 	
 	// Debug-Ausgaben //
@@ -487,6 +448,8 @@ ISR(TCC1_OVF_vect)
 					lowVoltageCount = 0;
 		}
 	#endif
+	
+	SPIC.DATA = maxChannel[0];
 }
 
 //UART F1-TX Interrupt (debug)
@@ -530,8 +493,14 @@ ISR(SPIC_INT_vect)
 		SPIC.DATA = 0;
 	}else{
 		maxVal |= SPIC.DATA;
-		SPIC.DATA = maxChannel[0];
+		tsopWerte[tsopMux] = maxVal;
 		maxMux = 0;
+		
+		tsopMux++;
+		if(tsopMux>7)
+			tsopMux = 0;
+		else
+			SPIC.DATA = maxChannel[tsopMux];
 	}
 }
 
@@ -963,6 +932,25 @@ void debug_output(void)
 			display.out_int(3,18, lEcke==-1?lEcke:lEcke*90+45);
 			display.out_int(4,8, lMuesli);
 		break;
+		
+		case 24:
+			display.out_str(1, 1, "TSOP0:");
+			display.out_int(1, 7, (int16_t)tsopWerte[0]);
+			display.out_str(2, 1, "TSOP1:");
+			display.out_int(2, 7, (int16_t)tsopWerte[1]);
+			display.out_str(3, 1, "TSOP2:");
+			display.out_int(3, 7, (int16_t)tsopWerte[2]);
+			display.out_str(4, 1, "TSOP3:");
+			display.out_int(4, 7, (int16_t)tsopWerte[3]);
+			display.out_str(1, 11, "TSOP4:");
+			display.out_int(1, 17, (int16_t)tsopWerte[4]);
+			display.out_str(2, 11, "TSOP5:");
+			display.out_int(2, 17, (int16_t)tsopWerte[5]);
+			display.out_str(3, 11, "TSOP6:");
+			display.out_int(3, 17, (int16_t)tsopWerte[6]);
+			display.out_str(4, 11, "TSOP7:");
+			display.out_int(4, 17, (int16_t)tsopWerte[7]);
+			break;
 		
 		default:
 			display.out_str(1, 1, "Ungueltige Seite:");

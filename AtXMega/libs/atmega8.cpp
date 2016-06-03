@@ -375,7 +375,7 @@ ISR(USARTE1_RXC_vect)
 				}
 				
 				if(maxWinkel==-1)    //Kein Sensor aktiv
-				trans=37;		 //Fehlercode
+					trans=37;		 //Fehlercode
 				else
 				{
 					int16_t winkelDiff=0;   //größte Winkeldifferenz finden und max/minWinkel ggf anpassen
@@ -437,14 +437,17 @@ ISR(USARTE1_RXC_vect)
 						}
 						out_winkel*=-1;
 						out = 4;
+						SETLED(3);
 						return;
 					}
 					lRichtung=-1;
 					preRichtung=-1;
 					lEcke=-1;
 					out = 0;
+					CLEARLED(3);
 					return;
 				}
+				SETLED(3);
 				int16_t ret=0;
 				mWinkel=trans*10+phi_jetzt;//@TODO
 				if(mWinkel<0)

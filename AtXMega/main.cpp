@@ -93,13 +93,13 @@ int main(void)
 	TWI_MasterInit(&twiMasterF, &TWIF, TWI_MASTER_INTLVL_HI_gc, TWI_BAUD(F_CPU, 100000UL));
 	
 	// Spi initialisieren
-	/*SPIC.CTRL = (0b0 << 7) | (0b1 << 6) | (0b1 << 4) | (0b00 << 2) | 0b11; //Doppelte Taktrate | Aktivieren | Master | Transfer Modus | Prescaler 1/32
-	SPIC.INTCTRL = 0b10;	//Interrupt Priorität (Medium)*/
+	SPIC.CTRL = (0b0 << 7) | (0b1 << 6) | (0b1 << 4) | (0b00 << 2) | 0b11; //Doppelte Taktrate | Aktivieren | Master | Transfer Modus | Prescaler 1/32
+	SPIC.INTCTRL = 0b10;	//Interrupt Priorität (Medium)
 	
 
 	// Ports deklarieren
 	PORTB.DIR = 0b00000000;		//Hall und JTAG 
-	PORTC.DIR = 0b11011011;		//Dribbler, Pixy und SPI
+	PORTC.DIR = 0b10111011;		//Dribbler, Pixy und SPI
 	PORTD.DIR = 0b10001011;		//Pixy, BT, I²C
 	PORTE.DIR = 0b10001111;		//Linie, Hall, PWM
 	PORTF.DIR = 0b10011011;		//BT, SDCS, Raspi, I²C
@@ -121,8 +121,7 @@ int main(void)
 	PORTK.OUTSET = (0b1 << 3);
 	
 	//CS für Max auf Low
-	/*PORTC.OUTCLR = (0b1 << 4);
-	SPIC.DATA = maxChannel[0];*/
+	PORTC.OUTCLR = (0b1 << 4);
 	
 	// PWM-Einstellungen (S. 163)
 	TCE0.CTRLA = (0b0001 << 0); // Prescaler (1)

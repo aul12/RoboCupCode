@@ -36,7 +36,7 @@
 
 //Display-Debug
 #define DISPLAY_COUNTER_WDH 50
-#define PAGE_COUNT 23
+#define PAGE_COUNT 24
 
 // Schuss benutzen
 #define _SCHUSS // Schuss in Spielfunktion
@@ -56,7 +56,7 @@
 // _COMPLEX_LINE = 5 => Lukas Logik -> Langsam auf Linie (nicht getestet)
 // _COMPLEX_LINE = 6 => Hannes Logik -> Langsam auf Linie (nicht getestet)
 // _COMPLEX_LINE = 7 => Linienerkennung über US (nur wenn Linie kaputt!)
-// _COMPLEX_LINE = 8 => Tim Logik -> sofortiges Dagegensteuern (funktioniert wahrscheinlich als einzige)
+// _COMPLEX_LINE = 8 => Tim Logik (funktioniert wahrscheinlich als einzige)
 #define _COMPLEX_LINE 8
 
 // Position
@@ -87,7 +87,7 @@
 #define SPEED_LINIE 1500 // Linie kritisch
 #define SPEED_WEIT 1000// Ball weit weg -> gerade Anfahrt
 #define SPEED_KREIS 1200// Ball hinter Roboter -> Kreis
-#define SPEED_NAH 900 // Ball vor Roboter -> Halbkreis
+#define SPEED_NAH 600 // Ball vor Roboter -> Halbkreis
 #define SPEED_SEITE 700 // seitlich zum Tor fahren
 #define SPEED_TORWART 1200 // Torwart 2 X
 #define SPEED_BALL 1300 //Geschwindigkeit mit Ball
@@ -128,6 +128,7 @@
 // Standard Ball-Distanz/Intensität
 #define ballIntens ball_Distanz
 //#define ballIntens ball_DistanzWinkel
+#define BALL_IN_DRIBB (ballda::check()/*&& ballIntens>4000 && BETRAG(ball_Winkel)<60*/)
 
 // Ultraschall
 #define _US_PID
@@ -228,11 +229,11 @@
 	LED 1: Watchdog
 	LED 2: Brownout
 	LED 1 und 2: Software Reset
-	LED 3: ESP aktiv
+	LED 3: Auf Linie oder Außerhalb
 	LED 4: Ballda
 	LED 5: Pixy erkennt Objekt
 	LED 6: Spannung kleiner 11V
-	LED 7: Kompass startet (Wenn lange dann Fehler)
+	LED 7: Kompass startet (Wenn länger 1 sek)
 	LED 8: Kompass kalibriert gerade
 */
 
