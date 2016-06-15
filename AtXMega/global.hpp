@@ -44,11 +44,10 @@ volatile int16_t tor_winkel = 0;			// Absoluter Winkel zum Tor
 // ADC
 volatile uint8_t muxIR = 0;				    // Aktueller ADC-Kanal
 volatile uint16_t ADC_Offset_0[] =			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
-	{251, 404, 392, 297,
-		426, 374, 620, 445};
+	{0,0,0,0,0,0,0,0};
 volatile uint16_t ADC_Offset_1[] =		
-	{336, 365, 482, 432,
-		 442, 294, 490, 382};
+	{360, 390, 506, 455,
+		467, 368, 540, 391};
 volatile uint16_t ADC_Offset[8];			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
 volatile uint16_t ADC_Werte[8] = { 0 };		// ADC-Werte für IR-Sensoren
 volatile uint16_t ADC_Werte_TP[8] = { 0 };	// ADC-Werte für IR-Sensoren (mit Tiefpass)
@@ -81,6 +80,9 @@ volatile uint8_t maxMux = 0;
 volatile uint8_t tsopMux = 0;
 volatile uint16_t maxVal = 0;
 volatile uint16_t tsopWerte[8];
+volatile uint16_t tsopSensorWinkel[8] = {0, 45, 90, 135, 180, 225, 270, 315};
+volatile int16_t tsopBallWinkel = 0;
+volatile uint16_t tsopBallIntens = 0;
 
 // Ultraschall
 volatile uint16_t US_Werte[3] = { 0 };		// Distanzen der Ultraschallsensoren (links, hinten, rechts, vorne)
@@ -107,6 +109,7 @@ volatile uint8_t display_page = 0;			// Aktuelle Displayseite
 volatile uint16_t keypad_last = 0;			// Letzte gedrückte Taste
 volatile uint16_t select_page = 0;			// Seitenwahl über Keypad
 volatile uint8_t display_counter = 0;		// Zähler um Ausgabe nicht jeden ISR aufzurufen
+volatile uint8_t displayPageChanged = 0;
 
 // Debug
 USART_data_t debug;							// BT2 mit FTDI-Chip

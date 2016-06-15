@@ -31,8 +31,8 @@ ISR(ADCA_CH0_vect)
 {
 	// letzten Messwert in Array eintragen
 	ADC_Werte[muxIR] = ADCA.CH0.RES-ADC_Offset[muxIR];
-	if(ROBO == 0 && muxIR == 7)
-		ADC_Werte[7] = (ADC_Werte[0] + ADC_Werte[6])/2;
+	/*if(ROBO == 0 && muxIR == 7)
+		ADC_Werte[7] = (ADC_Werte[0] + ADC_Werte[6])/2;*/
 	
 	// Tiefpass
 	#ifdef _TIEFPASS_IR

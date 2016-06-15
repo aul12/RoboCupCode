@@ -27,7 +27,7 @@ extern "C" {
 // Dribbler
 namespace dribbler {
 	// Steuerung
-	void power(bool ext);
+	void power(uint8_t ext);
 };
 
 // Schuss

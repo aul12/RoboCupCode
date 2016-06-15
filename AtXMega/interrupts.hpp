@@ -57,14 +57,26 @@ ISR(TCC1_OVF_vect)
 		lMuesli = 0;
 	}
 		
-	if(dribblerTime++ > 1500){
+	if(dribblerTime++ > 3000){
 		// Dribbler an/aus machen (externe Bedingungen)
-		dribbler::power(ball_Distanz > 2400 && BETRAG(ball_Winkel) < 75 && (MOTORTASTER || SW_pos != 3));
+		#ifdef _DRIBBLER
+			if(ball_Distanz > 2400 && BETRAG(ball_Winkel) < 75 && (MOTORTASTER || SW_pos != 3)){
+				if(out>0 || trick_shoot_turn>0 || phi_jetzt>90)
+					dribbler::power(2);
+				else
+					dribbler::power(1);
+			}else{
+				dribbler::power(false);
+			}
+		#else
+			dribbler::power(false);
+		#endif
 		
-		dribblerTime = 1600;
-	}else if(dribblerTime++ > 1000){
+		
+		dribblerTime = 3001;
+	}else if(dribblerTime++ > 2000){
 		TCC0.CCA = 500;
-	}else if(dribblerTime++ > 500){
+	}else if(dribblerTime++ > 1000){
 		TCC0.CCA = 1000;
 	}else{
 		TCC0.CCA = 500;
@@ -112,7 +124,28 @@ ISR(TCC1_OVF_vect)
 		#endif
     }
 	else if(PID_Counter == PID_Counter_Max/4) {	
+		#ifdef _POWER_MEASURE
 		voltage = spannung.getVoltage();
+		
+		if(voltage < 11000){
+			lowVoltageCount++;
+			
+			if(lowVoltageCount > 20){
+				SETLED(6);
+				if(lowVoltageCount>40)
+					lowVoltageCount = 40;
+			}
+		}
+		else{
+			lowVoltageCount--;
+			
+			if(lowVoltageCount<20){
+				CLEARLED(6);
+				if(lowVoltageCount < 0)
+					lowVoltageCount = 0;
+			}	
+		}
+		#endif
 		
 			
 		// Ball-Winkel & Distanz bestimmen
@@ -135,16 +168,12 @@ ISR(TCC1_OVF_vect)
 			}
 
 			ball_Winkel = ((int16_t)(atan2(Vektor_Y, Vektor_X)*180.0/M_PI));
-			ball_WinkelA = ball_Winkel - phi_jetzt;
 			
-			if(ROBO==0){
-				
-			}else{
-				ball_Winkel+=24;
-				
-				if(ball_Winkel>0)
-					ball_Winkel-=10;
+			if(ROBO==1){
+				ball_Winkel += 5;
 			}
+			
+			ball_WinkelA = ball_Winkel - phi_jetzt;
 				
 
 			if(ball_Winkel <= -180)
@@ -154,6 +183,24 @@ ISR(TCC1_OVF_vect)
 			ball_Distanz = (uint16_t)Round(hypot(Vektor_X, Vektor_Y));
 			ball_DistanzWinkel = corrDistanz(ball_Distanz, ball_Winkel);
 		}
+		
+		#ifdef _TSOP
+			// Ball-Winkel & Distanz für TSOP-Sensoren
+			float Vektor_X = 0, Vektor_Y = 0;
+			for(uint8_t i=0; i<8; i++) {
+				Vektor_X += tsopWerte[i]*sinus(tsopSensorWinkel[i]);
+				Vektor_Y += tsopWerte[i]*cosinus(tsopSensorWinkel[i]);
+			}
+
+			tsopBallWinkel = ((int16_t)(atan2(Vektor_Y, Vektor_X)*180.0/M_PI));			
+
+			if(tsopBallWinkel <= -180)
+				tsopBallWinkel += 360;
+			else if(tsopBallWinkel > 180)
+				tsopBallWinkel -= 360;
+				
+			tsopBallIntens = (uint16_t)Round(hypot(Vektor_X, Vektor_Y));
+		#endif
 		
 	/*	if(ballda::check()){
 			ballGute = 255;
@@ -429,27 +476,12 @@ ISR(TCC1_OVF_vect)
 		display_counter = 0;
 	}
 	
-	#ifdef _POWER_MEASURE
-		if(voltage < 11000){
-			lowVoltageCount++;
-			
-			if(lowVoltageCount > 10){
-				SETLED(6);
-				if(lowVoltageCount>20)
-					lowVoltageCount = 20;
-			}
-		}	
-		else{
-			lowVoltageCount--;
-			
-			if(lowVoltageCount<10)
-				CLEARLED(6);
-				if(lowVoltageCount < 0)
-					lowVoltageCount = 0;
-		}
+	
+	
+	#ifdef _TSOP
+		SPIC.DATA = maxChannel[0];
 	#endif
 	
-	SPIC.DATA = maxChannel[0];
 }
 
 //UART F1-TX Interrupt (debug)
@@ -507,6 +539,8 @@ ISR(SPIC_INT_vect)
 //Hall-Timer Overflow -> keine Bewegung
 ISR(TCD0_OVF_vect){
 	rpmHall[0] = 0;
+	
+	
 
 	//15-Sekunden kein Feedback -> Sensor-Defekt
 	if(hallNoRotationCounter[0]++ > 7)
@@ -644,7 +678,7 @@ void debug_output(void)
 				}
 			}
 		}
-		keypad_last = keypad;
+		keypad_last = keypad;	
 	}
 	display.clear();
 	
@@ -655,7 +689,7 @@ void debug_output(void)
 			display.write_char(ROBO + 0x30);
 			display.out_str(2, 1, "--------------------");
 			display.out_str(3, 1, "Seite 000 bis 009");
- 			display.out_str(4, 1, "aktuell Seite 000");
+			display.out_str(4, 1, "aktuell Seite 000");	
 		break;
 		case 1:
 			display.out_str(1, 1, "010 Fahrtrichtung");
@@ -936,20 +970,27 @@ void debug_output(void)
 		case 24:
 			display.out_str(1, 1, "TSOP0:");
 			display.out_int(1, 7, (int16_t)tsopWerte[0]);
-			display.out_str(2, 1, "TSOP1:");
+			display.out_str(2, 1, "1:");
 			display.out_int(2, 7, (int16_t)tsopWerte[1]);
-			display.out_str(3, 1, "TSOP2:");
+			display.out_str(3, 1, "2:");
 			display.out_int(3, 7, (int16_t)tsopWerte[2]);
-			display.out_str(4, 1, "TSOP3:");
+			display.out_str(4, 1, "3:");
 			display.out_int(4, 7, (int16_t)tsopWerte[3]);
-			display.out_str(1, 11, "TSOP4:");
+			display.out_str(1, 12, "4:");
 			display.out_int(1, 17, (int16_t)tsopWerte[4]);
-			display.out_str(2, 11, "TSOP5:");
+			display.out_str(2, 12, "5:");
 			display.out_int(2, 17, (int16_t)tsopWerte[5]);
-			display.out_str(3, 11, "TSOP6:");
+			display.out_str(3, 12, "6:");
 			display.out_int(3, 17, (int16_t)tsopWerte[6]);
-			display.out_str(4, 11, "TSOP7:");
+			display.out_str(4, 12, "7:");
 			display.out_int(4, 17, (int16_t)tsopWerte[7]);
+			break;
+			
+		case 25:
+			display.out_str(1, 1, "TSOP Winkel:");
+			display.out_int(1, 12, (int16_t)tsopBallWinkel);
+			display.out_str(2, 1, "TSOP Intens:");
+			display.out_int(2, 12, (int16_t)tsopBallIntens);
 			break;
 		
 		default:

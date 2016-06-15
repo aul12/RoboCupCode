@@ -20,7 +20,7 @@
 //#define _CMPS
 
 // Sharpsensor
-//#define _TSOP
+#define _TSOP
 
 //Pixie
 //#define _PIXIE
@@ -34,9 +34,12 @@
 //Spannungmessung
 #define _POWER_MEASURE
 
+//Mit Dribbler fahren (because Hardware...)
+//#define _DRIBBLER
+
 //Display-Debug
 #define DISPLAY_COUNTER_WDH 50
-#define PAGE_COUNT 24
+#define PAGE_COUNT 25
 
 // Schuss benutzen
 #define _SCHUSS // Schuss in Spielfunktion
@@ -87,7 +90,7 @@
 #define SPEED_LINIE 1500 // Linie kritisch
 #define SPEED_WEIT 1000// Ball weit weg -> gerade Anfahrt
 #define SPEED_KREIS 1200// Ball hinter Roboter -> Kreis
-#define SPEED_NAH 600 // Ball vor Roboter -> Halbkreis
+#define SPEED_NAH 750 // Ball vor Roboter -> Halbkreis
 #define SPEED_SEITE 700 // seitlich zum Tor fahren
 #define SPEED_TORWART 1200 // Torwart 2 X
 #define SPEED_BALL 1300 //Geschwindigkeit mit Ball
@@ -128,7 +131,7 @@
 // Standard Ball-Distanz/Intensität
 #define ballIntens ball_Distanz
 //#define ballIntens ball_DistanzWinkel
-#define BALL_IN_DRIBB (ballda::check()/*&& ballIntens>4000 && BETRAG(ball_Winkel)<60*/)
+#define BALL_IN_DRIBB (ballda::check() && ballIntens>3000 && BETRAG(ball_Winkel)<20)
 
 // Ultraschall
 #define _US_PID
@@ -179,7 +182,7 @@
 #define LINIENTASTER SCHALTER(5)
 #define DISPLAYTASTER SCHALTER(3)
 #define EEPROMTASTER (!(PORTH.IN & (1 << 6)))
-#define LICHTSCHRANKE (!(PORTK.IN & (1 << 1))) 
+#define LICHTSCHRANKE (PORTK.IN & (1 << 1)) 
 #define SW_LINKS SCHALTER(2)
 #define SW_RECHTS SCHALTER(4)
 
@@ -231,10 +234,10 @@
 	LED 1 und 2: Software Reset
 	LED 3: Auf Linie oder Außerhalb
 	LED 4: Ballda
-	LED 5: Pixy erkennt Objekt
+	LED 5: -
 	LED 6: Spannung kleiner 11V
-	LED 7: Kompass startet (Wenn länger 1 sek)
-	LED 8: Kompass kalibriert gerade
+	LED 7: Kompass startet (Wenn länger 1 sek dann Fehler)
+	LED 8: Kompass kalibriert
 */
 
 #endif

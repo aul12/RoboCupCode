@@ -49,12 +49,15 @@ namespace ballda {
 ////////////////////////
 
 // Dribblersteuerung
-void dribbler::power(bool ext)
+void dribbler::power(uint8_t ext)
 {
-	if(!force_off && (ext/* || (::ballda::ball_da && SW_pos!=3)*/)) {
+	if(!force_off && ext) {
 		//Dribbler an
-		TCC0.CCA = 1000;
-		nachlauf = 0;		//@CHECK
+		if(ext==2)
+			TCC0.CCA = 1000;
+		else
+			TCC0.CCA = 650;
+		nachlauf = 0;
 	}
 	else {
 		if(--nachlauf == 0) {
