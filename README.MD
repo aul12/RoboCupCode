@@ -64,7 +64,7 @@ LED 7: Kompass startet (Wenn länger 1 sek dann Fehler)
 	
 LED 8: Kompass kalibriert
 
-##Schalter
+## Schalter
 Schalter 1: Motoren
 
 Schalter 2 und 4: Spielprogramm:
@@ -89,7 +89,7 @@ Schalter 6: Linie kalibrieren (Roboter über Linie ziehen, Roboter nimmt höchst
 	|6	2|
 	------
 
-##Mögliche Fehler
+## Mögliche Fehler
 - Der Roboter fährt schlecht/gar nicht an und fährt nicht zurück vor das Tor (IR Werte am Display checken, Erdung, US checken)
 - Der Roboter fährt komisch/langsam (Ein Motor funktioniert nicht, ADC Werte schlecht kalibriert, Akku leer)
 - Der Roboter verdreht sich mit der Zeit (Kompass funktioniert nicht, nicht ordentlich kalibriert)
@@ -98,4 +98,3 @@ Schalter 6: Linie kalibrieren (Roboter über Linie ziehen, Roboter nimmt höchst
 - Watchdogs / Software Resets (Überprüfen ob alle Spannungen aktiv sind, Sensoren ordentlich einstecken)
 - Linienplatine lässt sich nicht programmieren (ein Max-Chip ist defekt)
 - Roboter schießt wenn nah am Ball (Lichtschranke defekt, Schuss hängt in Lichtschranke)
-- 
