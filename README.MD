@@ -41,10 +41,11 @@
 [Bodenplatine/stddefs.h](Bodenplatine/stddefs.h): Konstante Definitionen und globale Variablen
 
 
-##Fuses
+## Fuses
 Auf jeden Xmega bei erster Benutzung brennen (Tools->Device Programming):
-FF;00;FF;FF;F2
-##LEDs
+
+**FF;00;FF;FF;F2**
+## LEDs
 LED 1: Watchdog
 	
 LED 2: Brownout
@@ -62,7 +63,7 @@ LED 6: Spannung kleiner 11V
 LED 7: Kompass startet (Wenn länger 1 sek dann Fehler)
 	
 LED 8: Kompass kalibriert
-##PDI Stecker mit Kabel vom jtag ice 3
+## PDI Stecker mit Kabel vom jtag ice 3
  	____
 ______	
 	|3	4|
