@@ -687,7 +687,8 @@ void debug_output(void)
 		case 0:
 			display.out_str(1, 1, "Inhaltsverzeichnis ");
 			display.write_char(ROBO + 0x30);
-			display.out_str(2, 1, "--------------------");
+			display.out_str(2, 1, __DATE__);
+			display.out_str(2, 13, __TIME__);
 			display.out_str(3, 1, "Seite 000 bis 009");
 			display.out_str(4, 1, "aktuell Seite 000");	
 		break;

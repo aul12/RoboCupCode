@@ -46,8 +46,8 @@ volatile uint8_t muxIR = 0;				    // Aktueller ADC-Kanal
 volatile uint16_t ADC_Offset_0[] =			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
 	{0,0,0,0,0,0,0,0};
 volatile uint16_t ADC_Offset_1[] =		
-	{360, 390, 506, 455,
-		467, 368, 540, 391};
+	{370, 380, 495, 454,
+		467, 375, 547, 410};
 volatile uint16_t ADC_Offset[8];			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
 volatile uint16_t ADC_Werte[8] = { 0 };		// ADC-Werte für IR-Sensoren
 volatile uint16_t ADC_Werte_TP[8] = { 0 };	// ADC-Werte für IR-Sensoren (mit Tiefpass)

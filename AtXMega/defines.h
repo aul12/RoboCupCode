@@ -83,8 +83,8 @@
 #define PID_D 0.0625
 
 #define US_P 12.0
-#define US_I 4.0
-#define US_D 0.2
+#define US_I 5.0
+#define US_D 0.4
 #define MPU_ROLL 1
 // Ballanfahrt
 #define SPEED_LINIE 1500 // Linie kritisch
@@ -116,7 +116,7 @@
 #define DRIBBLER_READY 4000
 
 // Ballweg-Intensität
-#define ADC_BALLWEG_AKTIV 300
+#define ADC_BALLWEG_AKTIV 320
 #define ADC_BALLWEG_PASSIV 2000
 
 #define ADC_BALLINAKTIV 400
@@ -227,17 +227,4 @@
 
 #define SETLED(led) (PORTJ.OUTSET = (1 << (led-1)))
 #define CLEARLED(led) (PORTJ.OUTCLR = (1 << (led-1)))
-
-/*
-	LED 1: Watchdog
-	LED 2: Brownout
-	LED 1 und 2: Software Reset
-	LED 3: Auf Linie oder Außerhalb
-	LED 4: Ballda
-	LED 5: -
-	LED 6: Spannung kleiner 11V
-	LED 7: Kompass startet (Wenn länger 1 sek dann Fehler)
-	LED 8: Kompass kalibriert
-*/
-
 #endif

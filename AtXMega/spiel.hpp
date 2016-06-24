@@ -71,15 +71,11 @@ inline void zumTorDrehenUndSchiessen(){
 		soll_phi = 0;
 		super_turn = 0;
 	}else{ //Am Rand -> Richtung Tor drehen
+		darfHalbRaus = 1;
 		super_turn = 0;
 		FahrtrichtungB(0, SPEED_BALL);
 		
 		soll_phi = (US_pos[0]-90) * -0.5;
-		/*if(US_pos[0] < 90){
-			soll_phi = 45;
-		}else{
-			soll_phi = -45;
-		}*/
 		
 		if(BETRAG(soll_phi-phi_jetzt)<10){
 			schuss::Kick();

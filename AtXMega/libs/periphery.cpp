@@ -1,14 +1,5 @@
 // periphery.cpp: Peripheriegeräte
 
-//PDI BELEGUNG
-/*
-	 ____
-	|3	4|
-	 X	X|
-	|6	2|
-	 ----
-*/
-
 ////////////
 // Header //
 ////////////
