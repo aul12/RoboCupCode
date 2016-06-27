@@ -18,7 +18,7 @@
 //Anfahrt Prototyp
 inline void anfahrtB(uint8_t drehung)
 {
-	if(ballIntens>2400 && BETRAG(ball_Winkel)<135)
+	if(ballIntens>2000 && BETRAG(ball_Winkel)<135)
 		darfHalbRaus = 1;
 		
 	if(ballIntens > 3000 || (ballIntens > 2800 && BETRAG(ball_Winkel) < 45)) { // Nahbereich-Anfahrt
@@ -75,7 +75,11 @@ inline void zumTorDrehenUndSchiessen(){
 		super_turn = 0;
 		FahrtrichtungB(0, SPEED_BALL);
 		
-		soll_phi = (US_pos[0]-90) * -0.5;
+		#ifdef _PIXIE
+			soll_phi = tor_winkel;
+		#else
+			soll_phi = (US_pos[0]-90) * -0.5;
+		#endif
 		
 		if(BETRAG(soll_phi-phi_jetzt)<10){
 			schuss::Kick();
@@ -367,7 +371,7 @@ void spielSuper3(void)
 	soll_phi = tor_winkel;
 	if(ballda::check()  && ballIntens>3000 && BETRAG(ball_Winkel)<20) {
 		#ifdef _SCHUSS
-		if(BETRAG(phi_jetzt-tor_winkel) < 1 || (NO_OBJECT && BETRAG(phi_jetzt<45))) {
+		if(BETRAG(phi_jetzt-tor_winkel) < 1 || (BETRAG(phi_jetzt<45))) {
 			schuss::Kick();
 			FahrtrichtungB(tor_winkel-phi_jetzt,SPEED_BALL);
 		}

@@ -23,7 +23,7 @@
 #define _TSOP
 
 //Pixie
-//#define _PIXIE
+#define _PIXIE
 
 //Bluetooth
 #define BLUETOOTH_ENABLE false
@@ -35,7 +35,7 @@
 #define _POWER_MEASURE
 
 //Mit Dribbler fahren (because Hardware...)
-//#define _DRIBBLER
+#define _DRIBBLER
 
 //Display-Debug
 #define DISPLAY_COUNTER_WDH 50
@@ -75,8 +75,9 @@
 #define PID_flaeche_Max 200
 
 #define BALL_P 0.6
-#define BALL_D 0.2
-#define MAX_DREH_BALL 1000
+#define BALL_D 0.25
+#define MAX_DREH 1000
+#define MAX_DREH_BALL 400
 
 #define PID_P 15.625
 #define PID_I 8.0
@@ -90,7 +91,7 @@
 #define SPEED_LINIE 1500 // Linie kritisch
 #define SPEED_WEIT 1000// Ball weit weg -> gerade Anfahrt
 #define SPEED_KREIS 1200// Ball hinter Roboter -> Kreis
-#define SPEED_NAH 750 // Ball vor Roboter -> Halbkreis
+#define SPEED_NAH 700 // Ball vor Roboter -> Halbkreis
 #define SPEED_SEITE 700 // seitlich zum Tor fahren
 #define SPEED_TORWART 1200 // Torwart 2 X
 #define SPEED_BALL 1300 //Geschwindigkeit mit Ball

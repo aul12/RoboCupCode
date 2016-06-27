@@ -277,10 +277,18 @@ ISR(TCC1_OVF_vect)
 		PID = PID_P * delta_phi + PID_I * PID_flaeche + PID_D * roll;
 
 		// Langsamer drehen
-		if(PID > MAX_DREH_BALL)
-			PID = MAX_DREH_BALL;
-		else if(PID < -MAX_DREH_BALL)
-			PID = -MAX_DREH_BALL;
+		if(ballda::check()){
+			if(PID > MAX_DREH_BALL)
+				PID = MAX_DREH_BALL;
+			else if(PID < -MAX_DREH_BALL)
+				PID = -MAX_DREH_BALL;
+		}else{
+			if(PID > MAX_DREH)
+				PID = MAX_DREH;
+			else if(PID < -MAX_DREH)
+				PID = -MAX_DREH;
+		}
+		
 		PID_int = (int16_t)Round(PID);
 		if(super_turn!=0  && out < 3)
 			PID_int = super_turn;
@@ -905,7 +913,7 @@ void debug_output(void)
 				display.out_str(1, 1, "phi:");
 				display.out_int(1, 8, (int16_t)tor_winkel);
 				display.out_str(2, 1, "xdiff:");
-				display.out_int(2, 8, (int16_t)_xdiff);
+			//	display.out_int(2, 8, (int16_t)_xdiff);
 				display.out_str(3, 1, "xPos:");
 				display.out_int(3, 8, (int16_t)pixyVorneData->xPos);
 				display.out_str(4, 1, "phiJ:");

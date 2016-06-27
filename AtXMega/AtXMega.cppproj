@@ -302,11 +302,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Portbelegung.txt">
-      <SubType>compile</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="driver" />
     <Folder Include="libs" />
     <Folder Include="sensor" />

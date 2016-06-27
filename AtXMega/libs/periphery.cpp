@@ -47,7 +47,7 @@ void dribbler::power(uint8_t ext)
 		if(ext==2)
 			TCC0.CCA = 1000;
 		else
-			TCC0.CCA = 650;
+			TCC0.CCA = 625;
 		nachlauf = 0;
 	}
 	else {
