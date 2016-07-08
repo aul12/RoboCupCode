@@ -15,31 +15,25 @@
 
 //IMU benutzen  --> BoschSensor
 #define _IMU
-#define _FASTCALIB	//Schnelle Kalibration, eventuell größere Störungen
+//#define _FASTCALIB	//Schnelle Kalibration, eventuell größere Störungen
 #define _GYRO_ONLY //Werte nur mit Gyro-Integration
 //#define _CMPS
 
-// Sharpsensor
-#define _TSOP
-
 //Pixie
-#define _PIXIE
+//#define _PIXIE
 
 //Bluetooth
-#define BLUETOOTH_ENABLE false
-
-//Anti-Kipp Regelung
-#define _ESP
+#define _BLUETOOTH
 
 //Spannungmessung
-#define _POWER_MEASURE
+//#define _POWER_MEASURE
 
 //Mit Dribbler fahren (because Hardware...)
 #define _DRIBBLER
 
 //Display-Debug
 #define DISPLAY_COUNTER_WDH 50
-#define PAGE_COUNT 25
+#define PAGE_COUNT 26
 
 // Schuss benutzen
 #define _SCHUSS // Schuss in Spielfunktion
@@ -47,8 +41,20 @@
 #define KICK_DAUER 100
 #define SCHUSS_DELAY 254
 
+#ifndef _PIXIE
+	#define TOR_WINKEL (US_pos[1]>90?((US_pos[0]-90) * -0.8):((US_pos[0]-90) * -0.4))
+#else
+	#define _TOR_WINKEL (-(pixyVorneData->xPos-160)/4 + phi_jetzt)
+	#define TOR_WINKEL (_TOR_WINKEL>70?70: _TOR_WINKEL<-70?-70:_TOR_WINKEL)
+#endif
+
 // Spielart -> standard Soccer B
-//#define SUPERFIELD
+#define SUPERFIELD
+
+#ifdef SUPERFIELD
+	#define _TSOP
+	#define _PIXIE
+#endif
 
 // Linienerkennung
 // _COMPLEX_LINE = 0 => einfache Linienerkennung
@@ -75,9 +81,9 @@
 #define PID_flaeche_Max 200
 
 #define BALL_P 0.6
-#define BALL_D 0.25
+#define BALL_D 0.5
 #define MAX_DREH 1000
-#define MAX_DREH_BALL 400
+#define MAX_DREH_BALL 450
 
 #define PID_P 15.625
 #define PID_I 8.0
@@ -86,12 +92,12 @@
 #define US_P 12.0
 #define US_I 5.0
 #define US_D 0.4
-#define MPU_ROLL 1
+
 // Ballanfahrt
 #define SPEED_LINIE 1500 // Linie kritisch
 #define SPEED_WEIT 1000// Ball weit weg -> gerade Anfahrt
 #define SPEED_KREIS 1200// Ball hinter Roboter -> Kreis
-#define SPEED_NAH 700 // Ball vor Roboter -> Halbkreis
+#define SPEED_NAH 650 // Ball vor Roboter -> Halbkreis
 #define SPEED_SEITE 700 // seitlich zum Tor fahren
 #define SPEED_TORWART 1200 // Torwart 2 X
 #define SPEED_BALL 1300 //Geschwindigkeit mit Ball
@@ -111,14 +117,14 @@
 
 //Brushless-Dribbler
 #define DRIBBLER_PRESET 0
-//#define DRIBBLER_POWERSTART 60
 #define DRIBBLER_POWERSTART_0 300
 #define DRIBBLER_POWERSTART_VOLL 2000
 #define DRIBBLER_READY 4000
 
 // Ballweg-Intensität
 #define ADC_BALLWEG_AKTIV 320
-#define ADC_BALLWEG_PASSIV 2000
+#define ADC_BALLWEG_PASSIV 1800
+#define TSOP_BALLWEG  300
 
 #define ADC_BALLINAKTIV 400
 
@@ -167,10 +173,10 @@
 
 // Pointer
 #define Null_EEPROM ((uint16_t*)0)
-#define Torrichtung_EEPROM ((uint16_t*)80)
+#define Torrichtung_EEPROM ((uint16_t*)160)
 
 // Schussdauer
-#define KICK_DAUER_LOW 15
+#define KICK_DAUER_LOW 9
 
 //Max Chip
 #define MAX_READY (PORTD.IN & (0b1<<5))
@@ -186,6 +192,7 @@
 #define LICHTSCHRANKE (PORTK.IN & (1 << 1)) 
 #define SW_LINKS SCHALTER(2)
 #define SW_RECHTS SCHALTER(4)
+#define ADC_SCHALTER (!(PORTH.IN&(1<<7)))
 
 #define SCHALTER(in) (PORTH.IN & (1 << (in-1)))
 
@@ -228,4 +235,5 @@
 
 #define SETLED(led) (PORTJ.OUTSET = (1 << (led-1)))
 #define CLEARLED(led) (PORTJ.OUTCLR = (1 << (led-1)))
+#define LEDSTATUS(led, status) (status?SETLED(led):CLEARLED(led))
 #endif

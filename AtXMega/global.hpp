@@ -40,15 +40,18 @@ volatile int16_t gyroPhi = 0;
 
 volatile int16_t tor_winkel = 0;			// Absoluter Winkel zum Tor
 
+volatile int16_t ballOrangeWinkel = 0;
 
 // ADC
 volatile uint8_t muxIR = 0;				    // Aktueller ADC-Kanal
 volatile uint16_t ADC_Offset_0[] =			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
-	{0,0,0,0,0,0,0,0};
+	{289, 420, 410, 287,
+		447, 406, 445, 351};
 volatile uint16_t ADC_Offset_1[] =		
-	{370, 380, 495, 454,
-		467, 375, 547, 410};
+	{290, 345, 470, 429,
+		400, 300, 447, 345};
 volatile uint16_t ADC_Offset[8];			// Offset der IR-Sensoren (Werte danach -> <ADC_BALLWEG)
+volatile uint16_t ADC_Offset_tmp[8];
 volatile uint16_t ADC_Werte[8] = { 0 };		// ADC-Werte für IR-Sensoren
 volatile uint16_t ADC_Werte_TP[8] = { 0 };	// ADC-Werte für IR-Sensoren (mit Tiefpass)
 volatile uint16_t ball_Distanz = 0;			// Distanz vom Roboter zum Ball
@@ -65,6 +68,8 @@ volatile uint8_t lego_IR = 0;				// Lego-Sensor IR
 volatile int16_t TSOP = 0;					// TSOP-IR-Sensor
 volatile uint8_t super_back = 0;			// Super-Field Patroullie
 
+volatile uint8_t adc_kalib = 0;
+
 // TSOP
 const uint8_t maxChannel[8] = {
 	0b11111110,
@@ -76,11 +81,12 @@ const uint8_t maxChannel[8] = {
 	0b11001110,
 	0b10001110
 };
+
 volatile uint8_t maxMux = 0;
 volatile uint8_t tsopMux = 0;
 volatile uint16_t maxVal = 0;
 volatile uint16_t tsopWerte[8];
-volatile uint16_t tsopSensorWinkel[8] = {0, 45, 90, 135, 180, 225, 270, 315};
+volatile uint16_t tsopSensorWinkel[8] = {3, 2, 1, 0, 7, 6, 5, 4};
 volatile int16_t tsopBallWinkel = 0;
 volatile uint16_t tsopBallIntens = 0;
 
@@ -119,6 +125,7 @@ uint8_t debugCount = 0;						// Debugging Zähler für USB
 USART_data_t bluetooth;						// BT für Comm
 uint16_t ballGute = 0;						// Aktuelle Güte der Anfahrt
 uint8_t ballGuteEmpfang = 0;				// Aktuelle Güte der Anfahrt des anderen Roboters
+uint8_t bluetoothTimeout = 0;
 
 //Dribbler
 volatile uint8_t dribblerInit = 0;			// Dribbler Initialisierung State-Machine Zustand

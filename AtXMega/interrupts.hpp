@@ -25,8 +25,8 @@ ISR(TCC1_OVF_vect)
 			if(EEPROMTASTER) { // Wenn EEPROM-Schalter auf ein
 				if(EEPROM_write) {
 					#ifdef _IMU
-						Torrichtung = imu.eulHeading();
 						_gyroPhi = 0;
+						Torrichtung = imu.eulHeading();	
 					#else
 						Torrichtung = CMPS/10;
 					#endif
@@ -45,7 +45,6 @@ ISR(TCC1_OVF_vect)
 				atmega8_kalibration(LINIENTASTER?1:0);
 			else
 				atmega8_kalibration(0);
-
 		}
 	}else { // Anzahl erhöhen
 		Soft_Counter++;
@@ -59,12 +58,10 @@ ISR(TCC1_OVF_vect)
 		
 	if(dribblerTime++ > 3000){
 		// Dribbler an/aus machen (externe Bedingungen)
+		
 		#ifdef _DRIBBLER
-			if(ball_Distanz > 2400 && BETRAG(ball_Winkel) < 75 && (MOTORTASTER || SW_pos != 3)){
-				if(out>0 || trick_shoot_turn>0 || phi_jetzt>90)
-					dribbler::power(2);
-				else
-					dribbler::power(1);
+			if(ball_Distanz > 3000 && BETRAG(ball_Winkel) < 75 && (MOTORTASTER || SW_pos != 3) && !adc_kalib){
+				dribbler::power(true);
 			}else{
 				dribbler::power(false);
 			}
@@ -108,12 +105,9 @@ ISR(TCC1_OVF_vect)
 				phi_jetzt = _phi_jetzt;
 							
 				//Voll Kalibriert
-				uint8_t calibStat = imu.calibStatus();
-				
-				if(calibStat >= 0xF3){
+				if(imu.calibStatus() >= 0xF3){
 					CLEARLED(8);
-				}
-				else{
+				}else{
 					SETLED(8);
 				}
 			}
@@ -151,13 +145,13 @@ ISR(TCC1_OVF_vect)
 		// Ball-Winkel & Distanz bestimmen
 		uint16_t weg = SCHALTER(6)?ADC_BALLWEG_AKTIV:ADC_BALLWEG_PASSIV;
 		
-	//	uint8_t ballWeg = false;
+		uint8_t ballWeg = false;
 		
 		if((ADC_Werte[0] < weg) && (ADC_Werte[1] < weg) && (ADC_Werte[2] < weg) && (ADC_Werte[3] < weg) && (ADC_Werte[4] < weg) && (ADC_Werte[5] < weg) && (ADC_Werte[6] < weg) && (ADC_Werte[7] < weg)) {
 			// Ball nicht gefunden
 			ball_DistanzWinkel = ball_Distanz = 5;
 			ball_Winkel = 0;
-		//	ballWeg = true;
+			ballWeg = true;
 		}
 		else {
 			// Ball-Winkel & Distanz normal bestimmen
@@ -170,7 +164,7 @@ ISR(TCC1_OVF_vect)
 			ball_Winkel = ((int16_t)(atan2(Vektor_Y, Vektor_X)*180.0/M_PI));
 			
 			if(ROBO==1){
-				ball_Winkel += 5;
+				//ball_Winkel += 5;
 			}
 			
 			ball_WinkelA = ball_Winkel - phi_jetzt;
@@ -186,28 +180,59 @@ ISR(TCC1_OVF_vect)
 		
 		#ifdef _TSOP
 			// Ball-Winkel & Distanz für TSOP-Sensoren
-			float Vektor_X = 0, Vektor_Y = 0;
+			/*float Vektor_X = 0, Vektor_Y = 0;
 			for(uint8_t i=0; i<8; i++) {
 				Vektor_X += tsopWerte[i]*sinus(tsopSensorWinkel[i]);
 				Vektor_Y += tsopWerte[i]*cosinus(tsopSensorWinkel[i]);
 			}
 
-			tsopBallWinkel = ((int16_t)(atan2(Vektor_Y, Vektor_X)*180.0/M_PI));			
+			tsopBallWinkel = ((int16_t)(atan2(Vektor_Y, Vektor_X)*180.0/M_PI));*/	
+			
+			uint8_t tsopMin = 0;
+			
+			for(uint8_t c=0; c<8; c++){
+				if(tsopWerte[c]>tsopWerte[tsopMin]){
+					tsopMin = c;
+				}
+			}
+			
+			tsopBallWinkel = tsopMin * 45 - 135;		
 
 			if(tsopBallWinkel <= -180)
 				tsopBallWinkel += 360;
 			else if(tsopBallWinkel > 180)
 				tsopBallWinkel -= 360;
 				
-			tsopBallIntens = (uint16_t)Round(hypot(Vektor_X, Vektor_Y));
-		#endif
+			if(tsopWerte[0] < TSOP_BALLWEG &&
+				tsopWerte[1] < TSOP_BALLWEG &&
+				tsopWerte[2] < TSOP_BALLWEG &&
+				tsopWerte[3] < TSOP_BALLWEG &&
+				tsopWerte[4] < TSOP_BALLWEG &&
+				tsopWerte[5] < TSOP_BALLWEG &&
+				tsopWerte[6] < TSOP_BALLWEG &&
+				tsopWerte[7] < TSOP_BALLWEG){
+				tsopBallIntens = 0;	
+			}else{
+				tsopBallIntens = tsopWerte[tsopMin];//(uint16_t)Round(hypot(Vektor_X, Vektor_Y));
+			}
+			
+		#endif 
 		
-	/*	if(ballda::check()){
+		//##########################################
+		if(!MOTORTASTER){
+			ballGute = 0;
+		}else if(BALL_IN_DRIBB){
 			ballGute = 255;
 		}else if(ballWeg){
-			ballGute = 1;
-		}else if(!MOTORTASTER){
-			ballGute = 0;
+			#ifdef SUPERFIELD
+			if(tsopBallIntens>0){
+				ballGute = tsopBallIntens/480;
+			}
+			#endif
+			{
+				ballGute = 1;
+			}
+			
 		}else{
 			ballGute = (ballIntens /60) * ((300-BETRAG(ball_Winkel))/120);
 			
@@ -215,7 +240,7 @@ ISR(TCC1_OVF_vect)
 				ballGute /= 2;
 		}
 		
-		usart_putc(&bluetooth, (uint8_t)ballGute);*/
+		usart_putc(&bluetooth, (uint8_t)ballGute);
 		
 		
 		// Ball-Inaktivität bestimmen
@@ -482,6 +507,8 @@ ISR(TCC1_OVF_vect)
 		void debug_output(void); // Deklaration -> Anweisung an Compiler dass Funktion existiert (ganz unten in Datei)
 		debug_output(); // Funktion aufrufen
 		display_counter = 0;
+	}else if(!DISPLAYTASTER){
+		display_page = 0;
 	}
 	
 	
@@ -490,6 +517,11 @@ ISR(TCC1_OVF_vect)
 		SPIC.DATA = maxChannel[0];
 	#endif
 	
+	noObjTimer++;
+	
+	if(noObjTimer>100){
+		noObjTimer = 101;
+	}
 }
 
 //UART F1-TX Interrupt (debug)
@@ -506,7 +538,7 @@ ISR(USARTD0_DRE_vect)
 
 ISR(USARTD0_RXC_vect){
 	// Daten empfangen
-	ballGuteEmpfang = debug.usart->DATA;
+	ballGuteEmpfang = bluetooth.usart->DATA;
 }
 
 // twiMasterD Interrupt
@@ -533,7 +565,7 @@ ISR(SPIC_INT_vect)
 		SPIC.DATA = 0;
 	}else{
 		maxVal |= SPIC.DATA;
-		tsopWerte[tsopMux] = maxVal;
+		tsopWerte[tsopMux] = 5000 - maxVal;
 		maxMux = 0;
 		
 		tsopMux++;
@@ -1001,6 +1033,15 @@ void debug_output(void)
 			display.out_str(2, 1, "TSOP Intens:");
 			display.out_int(2, 12, (int16_t)tsopBallIntens);
 			break;
+		
+		case 26:
+			display.out_str(1, 1, "Hier:");
+			display.out_int(1, 12, (int16_t)ballGute);
+			display.out_str(2, 1, "Da:");
+			display.out_int(2, 12, (int16_t)ballGuteEmpfang);
+			display.out_str(3, 1, ballGuteEmpfang>ballGute?"Passiv":"Aktiv");
+			break;
+			
 		
 		default:
 			display.out_str(1, 1, "Ungueltige Seite:");

@@ -8,6 +8,7 @@ extern volatile int16_t phi_jetzt;
 extern volatile int16_t tor_winkel;
 extern volatile int16_t tor_winkel_rel;
 extern volatile int16_t _xdiff;
+extern volatile int16_t ballOrangeWinkel;
 
 typedef struct PixyResult{
 	uint16_t breite;
@@ -25,23 +26,19 @@ enum PixyType{
 	COLOR_CODE_OBJECT
 };
 
-
-volatile uint8_t pixyNoObjectTimer = 0;
-
 //Pixy-Vorne
-USART_data_t pixyVorneUART;
+USART_data_t pixyVorneUART, pixyHintenUART;
 
-uint8_t muxPixy1 = 0;
+uint8_t muxPixyVorne = 0, muxPixyHinten = 0;
 
-volatile PixyResult_t *pixyVorneData, *pixyVorneReceiveData;
+volatile PixyResult_t *pixyVorneData, *pixyVorneReceiveData, *pixyHintenData, *pixyHintenReceiveData;
 
-volatile uint8_t newPixyData = 0;
-
-volatile uint8_t newPixyDiff = 0;
+volatile uint16_t noObjTimer = 0;
 
 void pixyInit()
 {
 	usart_init(&pixyVorneUART, &USARTC0, USART_BAUD_SELECT(9600, F_CPU), USART_DREINTLVL_LO_gc, USART_RXCINTLVL_MED_gc, true);
+	usart_init(&pixyHintenUART, &USARTD1, USART_BAUD_SELECT(9600, F_CPU), USART_DREINTLVL_LO_gc, USART_RXCINTLVL_MED_gc, true);
 }
 
 ISR(USARTC0_RXC_vect)
@@ -49,17 +46,17 @@ ISR(USARTC0_RXC_vect)
 	// Daten empfangen
 	uint8_t data = pixyVorneUART.usart->DATA;
 		
-	switch(muxPixy1){
+	switch(muxPixyVorne){
 		case 0:
 			if(data != 0x55){
-				muxPixy1 = 0;
+				muxPixyVorne = 0;
 				return;
 			}
 			break;
 		case 1:
 		case 3:
 			if(data != 0xaa){
-				muxPixy1 = 0;
+				muxPixyVorne = 0;
 				return;
 			}
 			break;
@@ -71,9 +68,10 @@ ISR(USARTC0_RXC_vect)
 				pixyVorneReceiveData->type = COLOR_CODE_OBJECT;
 			}	
 			else{
-				muxPixy1 = 0;
+				muxPixyVorne = 0;
 				return;
 			}
+			break;
 			
 		case 4:
 			pixyVorneReceiveData->checksum = data;
@@ -118,10 +116,11 @@ ISR(USARTC0_RXC_vect)
 				
 				int16_t x_diff = 160-pixyVorneReceiveData->xPos;
 				
-				//tor_winkel = ((atan(-x_diff*0.0047957937)*57.3 + phi_jetzt)+tor_winkel*9)/10;
+				pixyVorneData = pixyVorneReceiveData;
+				
 				tor_winkel = ((-x_diff/4 + phi_jetzt)+tor_winkel*9)/10;
 				
-				pixyNoObjectTimer = 0;
+				noObjTimer = 0;
 			}	
 			else{
 				pixyVorneReceiveData->checksumStimmt = false;
@@ -129,11 +128,106 @@ ISR(USARTC0_RXC_vect)
 						
 				
 			
-			muxPixy1 = 0;
+			muxPixyVorne = 0;
 			return;
 			
 	}
 	
-	muxPixy1++;
+	muxPixyVorne++;
 }
 
+
+ISR(USARTD1_RXC_vect){
+	// Daten empfangen
+	uint8_t data = pixyHintenUART.usart->DATA;
+	
+	switch(muxPixyHinten){
+		case 0:
+			if(data != 0x55){
+				muxPixyHinten = 0;
+				return;
+			}
+		break;
+		case 1:
+		case 3:
+			if(data != 0xaa){
+				muxPixyHinten = 0;
+				return;
+			}
+		break;
+		case 2:
+			if(data == 0x55){
+				pixyHintenReceiveData->type = NORMAL_OBJECT;
+			}
+			else if(data == 0x56){
+				pixyHintenReceiveData->type = COLOR_CODE_OBJECT;
+			}
+			else{
+				muxPixyHinten = 0;
+				return;
+			}
+			break;
+		
+		case 4:
+			pixyHintenReceiveData->checksum = data;
+		break;
+		case 5:
+			pixyHintenReceiveData->checksum |= (data << 8);
+		break;
+		case 6:
+			pixyHintenReceiveData->id = data;
+		break;
+		case 7:
+			pixyHintenReceiveData->id |= (data << 8);
+		break;
+		case 8:
+			pixyHintenReceiveData->xPos = data;
+		break;
+		case 9:
+			pixyHintenReceiveData->xPos |= (data << 8);
+		break;
+		case 10:
+			pixyHintenReceiveData->yPos = data;
+		break;
+		case 11:
+			pixyHintenReceiveData->yPos |= (data << 8);
+		break;
+		case 12:
+			pixyHintenReceiveData->breite = data;
+		break;
+		case 13:
+			pixyHintenReceiveData->breite |= (data << 8);
+		break;
+		case 14:
+			pixyHintenReceiveData->hoehe = data;
+		break;
+		case 15:
+			pixyHintenReceiveData->hoehe |= (data << 8);
+		
+		
+		
+			if((pixyHintenReceiveData->breite + pixyHintenReceiveData->hoehe + pixyHintenReceiveData->xPos + pixyHintenReceiveData->yPos + pixyHintenReceiveData->id) == pixyHintenReceiveData->checksum){
+				pixyHintenReceiveData->checksumStimmt = true;
+			
+				int16_t x_diff = 160-pixyHintenReceiveData->xPos;
+			
+				ballOrangeWinkel = ((-x_diff/4 + phi_jetzt +180)+tor_winkel*9)/10;
+				
+				if(ballOrangeWinkel>180)
+					ballOrangeWinkel -= 360;
+				else if(ballOrangeWinkel<-180)
+					ballOrangeWinkel += 360;
+			}
+			else{
+				pixyHintenReceiveData->checksumStimmt = false;
+			}
+		
+		
+		
+			muxPixyHinten = 0;
+		return;
+		
+	}
+	
+	muxPixyHinten++;
+}

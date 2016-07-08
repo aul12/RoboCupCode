@@ -120,8 +120,7 @@ uint16_t Pixie::getWord(void){
 		w <<= 8;
 		w |= c;
 		return w;
-	}
-	else{
+	}else{
 		this->result = PIXIE_ERROR_TWI;
 		return 0;
 	}

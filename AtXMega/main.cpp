@@ -113,6 +113,7 @@ int main(void)
 	PORTQ.PIN1CTRL = (0b011 << 3);
 	PORTQ.PIN2CTRL = (0b011 << 3);
 	PORTQ.PIN3CTRL = (0b011 << 3);
+	PORTH.PIN7CTRL = (0b011 << 3);
 	
 	//Pull-Up für Taster (EEPROM)
 	PORTH.PIN6CTRL = (0b011 << 3);
@@ -253,25 +254,13 @@ int main(void)
 		
 		
 	// ADC-Interrupt initialisieren
-	if(ROBO==0){
-		ADC_Offset[0] = ADC_Offset_0[0];
-		ADC_Offset[1] = ADC_Offset_0[1];
-		ADC_Offset[2] = ADC_Offset_0[2];
-		ADC_Offset[3] = ADC_Offset_0[3];
-		ADC_Offset[4] = ADC_Offset_0[4];
-		ADC_Offset[5] = ADC_Offset_0[5];
-		ADC_Offset[6] = ADC_Offset_0[6];
-		ADC_Offset[7] = ADC_Offset_0[7];
-	}
-	else{
-		ADC_Offset[0] = ADC_Offset_1[0];
-		ADC_Offset[1] = ADC_Offset_1[1];
-		ADC_Offset[2] = ADC_Offset_1[2];
-		ADC_Offset[3] = ADC_Offset_1[3];
-		ADC_Offset[4] = ADC_Offset_1[4];
-		ADC_Offset[5] = ADC_Offset_1[5];
-		ADC_Offset[6] = ADC_Offset_1[6];
-		ADC_Offset[7] = ADC_Offset_1[7];
+	for(uint8_t c=0; c<8; c++){
+		if(ROBO==0){
+			ADC_Offset[c] = ADC_Offset_0[c];
+		}else{
+			ADC_Offset[c] = ADC_Offset_1[c];
+		}
+		//ADC_Offset[c] = eeprom_read_word(Torrichtung_EEPROM + 2*c +2);
 	}
 	ADC_init();
 
@@ -350,16 +339,12 @@ int main(void)
 				out = 0;
 			}
 		#endif
-			else {
+			else{
 				#ifdef SUPERFIELD
 					// Warnung
-					#if _COMPLEX_LINE!=3&&_COMPLEX_LINE!=4
-						#warning Auf der Linie fahren geht nicht ohne _COMPLEX_LINE=3|4
-					#endif
-						
 					// Superfieldprogramme
 					if(SW_pos == 0) { // Superfieldprogramm normal schnell
-						spielSuper3();
+						spielSuper1();
 					} 
 					else if(SW_pos == 1) { // Superfieldprogramm normal
 						spielSuper2();
@@ -369,11 +354,9 @@ int main(void)
 					}
 					else { // Nullprogramm
 						PIDprogramm();
-						#ifdef _SCHUSS
-							if(!MOTORTASTER && ballda::check()) {
-								schuss::Kick_LP();
-							}
-						#endif
+						if(!MOTORTASTER && ballda::check()) {
+							schuss::Kick();
+						}
 						_delay_us(10);
 					}
 				#else
@@ -401,13 +384,15 @@ int main(void)
 			}
 		
 		//Debugging über USB
-		if(DISPLAYTASTER && !MOTORTASTER){
-			switch(debugCount ++){
+		if(DISPLAYTASTER && !MOTORTASTER && false){
+			debugCount = 0;
+			switch(debugCount){
 				case 0:
 					//ADC
 					for(uint8_t c=0; c<8; c++){
 						sendData(0xA0 + c, (uint8_t)(ADC_Werte[c]/16));
 					}
+						usart_putc(&debug, '\n');
 				break;
 				case 1:
 					//I²C
